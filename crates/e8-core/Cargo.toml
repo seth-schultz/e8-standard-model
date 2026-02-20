@@ -1,0 +1,19 @@
+[package]
+name = "e8-core"
+version = "0.1.0"
+edition = "2024"
+description = "E8 Standard Model — 49 SM parameters from 1 axiom, 0 free parameters"
+license = "MIT OR Apache-2.0"
+readme = "../../README.md"
+repository = "https://github.com/seth-schultz/e8-standard-model"
+keywords = ["physics", "e8", "standard-model", "lattice", "particle-physics"]
+categories = ["science", "mathematics"]
+rust-version = "1.85"
+
+[dependencies]
+rug = { version = "1.28", features = ["float", "integer", "complex", "rand"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+itertools = "0.14"
+
+[dev-dependencies]
