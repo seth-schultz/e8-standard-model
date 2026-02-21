@@ -73,10 +73,7 @@ Summary: 8 ■ THEOREM | 40 ◆ DERIVED | 1 ◇ DERIVED*
 
 This program derives all 49 experimentally measured Standard Model parameters — fermion masses, mixing angles, gauge couplings, the Higgs mass, and neutrino mass splittings — from a single mathematical structure: the E8 root lattice equipped with its Epstein zeta coupling. There are zero free parameters. Every numerical constant traces to a Lie algebra invariant. Every prediction is reproducible at arbitrary precision.
 
-The accompanying paper provides the complete 16-theorem proof chain:
-
-> *The E8 Standard Model: 49 Parameters from a Single Axiom*
-> [arXiv:XXXX.XXXXX](https://arxiv.org/abs/XXXX.XXXXX) | [Zenodo DOI](https://doi.org/XX.XXXX/zenodo.XXXXXXX)
+The accompanying paper provides the complete 16-theorem proof chain — see [`paper/e8_standard_model.pdf`](paper/e8_standard_model.pdf).
 
 ## What this is
 
@@ -306,37 +303,12 @@ cargo doc --no-deps # Zero warnings
 
 74 unit tests verify every mathematical identity, mass prediction, mixing matrix element, and scorecard value.
 
-## Citation
+## Paper
 
-If you use this software in your research, please cite both the paper and the code:
-
-```bibtex
-@software{e8_standard_model_code,
-  author    = {Schultz, Seth},
-  title     = {{E8 Standard Model}: {Rust} implementation of 49 {SM} parameters from 1 axiom},
-  year      = {2026},
-  url       = {https://github.com/seth-schultz/e8-standard-model},
-  doi       = {XX.XXXX/zenodo.XXXXXXX},
-  version   = {1.0.0},
-}
-```
-
-```bibtex
-@article{e8_standard_model_paper,
-  author    = {Schultz, Seth},
-  title     = {The {E8} Standard Model: 49 Parameters from a Single Axiom},
-  year      = {2026},
-  eprint    = {XXXX.XXXXX},
-  archivePrefix = {arXiv},
-  primaryClass  = {hep-th},
-}
-```
+The full manuscript is included in [`paper/e8_standard_model.pdf`](paper/e8_standard_model.pdf) (LaTeX source: [`paper/e8_standard_model.tex`](paper/e8_standard_model.tex)).
 
 ## License
 
-Licensed under either of
+**CC0 1.0 Universal — Public Domain Dedication**
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE))
-- MIT License ([LICENSE-MIT](LICENSE-MIT))
-
-at your option.
+The laws of physics belong to no one. This work — code, paper, and all derived data — is released into the public domain. You can copy, modify, distribute, and use it for any purpose, without asking permission. See [LICENSE](LICENSE).
