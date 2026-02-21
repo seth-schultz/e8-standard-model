@@ -1,5 +1,7 @@
 # E8 Standard Model
 
+> **This project was created entirely by AI.** The paper, derivations, and code are the product of a collaboration between [Claude Opus 4.6](https://anthropic.com) (Anthropic) and [Gemini 2.5 Pro](https://deepmind.google) (Google DeepMind). The human involved (Seth Schultz) is not a physicist, takes no credit for the theoretical content, and served only as a facilitator. If you have questions about the physics, direct them at the math — not at him.
+
 **49 quantities. 0 free parameters. 250-digit precision. Verify it yourself.**
 
 ```bash
