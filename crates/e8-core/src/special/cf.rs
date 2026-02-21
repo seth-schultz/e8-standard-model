@@ -37,24 +37,25 @@ pub fn cf_to_float(coeffs: &[u64]) -> Float {
 pub const ALPHA_CF_COEFFS: [u64; 4] = [244, 14, 13, 193];
 
 /// Evaluate 1/alpha CF rational at full depth (all 4 coefficients).
-/// [244;14,13,193] = 8623762/35333
+/// `[244;14,13,193]` = 8623762/35333
 pub fn alpha_cf_rational() -> (u64, u64) {
     cf_to_rational(&ALPHA_CF_COEFFS)
 }
 
-/// The level-2 truncation [244;14,13] = 44665/183, used for α_GUT.
+/// The level-2 truncation `[244;14,13]` = 44665/183, used for α_GUT.
 pub fn alpha_cf_rational_level2() -> (u64, u64) {
     cf_to_rational(&ALPHA_CF_COEFFS[..3])
 }
 
 /// Verify the Euclidean algorithm structure:
-/// 44665 = 244*183 + 13, 183 = 14*13 + 1
+/// 44665 = 244×183 + 13, 183 = 14×13 + 1.
+///
+/// The CF convergents are verified against the expected rational values.
+/// The Euclidean decomposition (244×183+13=44665, 14×13+1=183) is an
+/// algebraic identity guaranteed by the continued fraction algorithm.
 pub fn verify_euclidean() -> bool {
     let (p, q) = alpha_cf_rational_level2();
-    p == 44665
-        && q == 183
-        && 44665 == 244 * 183 + 13
-        && 183 == 14 * 13 + 1
+    p == 44665 && q == 183
 }
 
 #[cfg(test)]

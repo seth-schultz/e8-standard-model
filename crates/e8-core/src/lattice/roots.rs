@@ -2,7 +2,7 @@
 
 /// An E8 root as 8 rational coordinates (stored as 2× to avoid fractions).
 /// Each coordinate is either 0, ±2 (integer type) or ±1 (half-integer type).
-/// Actual coordinates: root[i] / 2.
+/// Actual coordinates: `root[i]` / 2.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Root {
     /// Coordinates multiplied by 2 to keep everything integer.
@@ -57,9 +57,9 @@ pub fn generate_e8_roots() -> Vec<Root> {
             continue;
         }
         let mut coords = [1i8; 8];
-        for bit in 0..8 {
+        for (bit, coord) in coords.iter_mut().enumerate() {
             if mask & (1 << bit) != 0 {
-                coords[bit] = -1;
+                *coord = -1;
             }
         }
         roots.push(Root { coords });

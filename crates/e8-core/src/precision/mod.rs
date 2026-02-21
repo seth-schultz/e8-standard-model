@@ -163,7 +163,9 @@ mod tests {
     fn test_constants() {
         set_precision(50);
         let p = pi();
-        assert!(p > 3.14159 && p < 3.14160);
+        let p_f64 = p.to_f64();
+        assert!(p_f64 > 3.0 && p_f64 < 4.0);
+        assert!((p_f64 - std::f64::consts::PI).abs() < 1e-10);
 
         let g = euler_gamma();
         assert!(g > 0.5772 && g < 0.5773);

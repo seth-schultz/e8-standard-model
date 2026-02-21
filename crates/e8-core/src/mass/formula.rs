@@ -127,8 +127,8 @@ mod tests {
     fn test_f_factors() {
         // Verify f-factors: 1/C₂ = 3/4, N_c/C₂ = 9/4
         let (num, den) = SU3.c2_fundamental;
-        assert_eq!(den * 1, 3); // f_up numerator
-        assert_eq!(num * 1, 4); // f_up denominator
+        assert_eq!(den, 3); // f_up numerator
+        assert_eq!(num, 4); // f_up denominator
         assert_eq!(N_C * den, 9); // f_down numerator
         assert_eq!(num, 4);       // f_down denominator
     }

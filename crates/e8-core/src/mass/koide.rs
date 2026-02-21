@@ -45,11 +45,11 @@ pub fn koide_masses(params: &KoideParams) -> [Float; 3] {
         Float::with_val(prec, 0),
     ];
 
-    for k in 0..3 {
+    for (k, mass) in masses.iter_mut().enumerate() {
         let angle = Float::with_val(prec, &two_pi_3 * k as u32) + &params.phi;
         let val = Float::with_val(prec, 1) + &r * cos(&angle);
         // m_k = M² × val² — CRITICAL: this is val², so negative val gives positive mass
-        masses[k] = Float::with_val(prec, Float::with_val(prec, &m_sq * &val) * &val);
+        *mass = Float::with_val(prec, Float::with_val(prec, &m_sq * &val) * &val);
     }
 
     masses

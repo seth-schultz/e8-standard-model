@@ -1,6 +1,6 @@
 [package]
 name = "e8-core"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
 description = "E8 Standard Model — 49 SM parameters from 1 axiom, 0 free parameters"
 license = "MIT OR Apache-2.0"

@@ -27,19 +27,13 @@ pub fn alpha() -> Float {
 }
 
 /// Verify the continued fraction decomposition:
-/// Level-2: [244;14,13] = 44665/183
-/// 44665 = 244 × 183 + 13
-/// 183 = 14 × 13 + 1
-/// Full: [244;14,13,193] = 8623762/35333
+/// Level-2: `[244;14,13]` = 44665/183
+/// (44665 = 244 × 183 + 13, 183 = 14 × 13 + 1)
+/// Full: `[244;14,13,193]` = 8623762/35333
 pub fn verify_cf_decomposition() -> bool {
     let (p2, q2) = crate::special::cf::alpha_cf_rational_level2();
     let (p4, q4) = crate::special::cf::alpha_cf_rational();
-    p2 == 44665
-        && q2 == 183
-        && p4 == 8623762
-        && q4 == 35333
-        && (244 * 183 + 13 == 44665)
-        && (14 * 13 + 1 == 183)
+    p2 == 44665 && q2 == 183 && p4 == 8623762 && q4 == 35333
 }
 
 #[cfg(test)]

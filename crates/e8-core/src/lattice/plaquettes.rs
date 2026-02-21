@@ -24,8 +24,8 @@ pub fn find_plaquettes(roots: &[Root]) -> Vec<[usize; 3]> {
         for j in (i + 1)..n {
             // Check if -(α + β) is also a root
             let mut neg_sum = [0i8; 8];
-            for k in 0..8 {
-                neg_sum[k] = -(roots[i].coords[k].wrapping_add(roots[j].coords[k]));
+            for (k, val) in neg_sum.iter_mut().enumerate() {
+                *val = -(roots[i].coords[k].wrapping_add(roots[j].coords[k]));
             }
 
             if let Some(&k) = lookup.get(&neg_sum) {

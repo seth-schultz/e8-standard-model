@@ -27,6 +27,7 @@ pub struct CKMResult {
 }
 
 /// Build the full CKM matrix from quark masses (zero free parameters).
+#[allow(clippy::needless_range_loop)]
 pub fn build_ckm(masses: &AllMasses) -> CKMResult {
     let prec = precision_bits();
 
@@ -241,6 +242,7 @@ pub fn build_ckm(masses: &AllMasses) -> CKMResult {
     }
 }
 
+#[allow(clippy::needless_range_loop)]
 /// Diagonalize a 3×3 real symmetric matrix via Jacobi rotations.
 /// Returns (eigenvalues sorted ascending, eigenvector columns).
 fn diag_real_symmetric_3x3(m: &[[Float; 3]; 3]) -> (Vec<Float>, Vec<Vec<Float>>) {
@@ -257,8 +259,8 @@ fn diag_real_symmetric_3x3(m: &[[Float; 3]; 3]) -> (Vec<Float>, Vec<Vec<Float>>)
 
     // Eigenvector matrix (starts as identity)
     let mut v = vec![vec![Float::with_val(prec, 0); n]; n];
-    for i in 0..n {
-        v[i][i] = Float::with_val(prec, 1);
+    for (i, row) in v.iter_mut().enumerate() {
+        row[i] = Float::with_val(prec, 1);
     }
 
     // Jacobi iteration
@@ -284,13 +286,12 @@ fn diag_real_symmetric_3x3(m: &[[Float; 3]; 3]) -> (Vec<Float>, Vec<Vec<Float>>)
 
         // Compute rotation angle
         let diff = Float::with_val(prec, &a[q][q] - &a[p][p]);
-        let theta;
-        if diff.clone().abs() < Float::with_val(prec, 1e-200f64) {
-            theta = pi() / Float::with_val(prec, 4);
+        let theta = if diff.clone().abs() < Float::with_val(prec, 1e-200f64) {
+            pi() / Float::with_val(prec, 4)
         } else {
             let tau = Float::with_val(prec, Float::with_val(prec, 2) * &a[p][q]) / &diff;
-            theta = Float::with_val(prec, tau.atan() / Float::with_val(prec, 2));
-        }
+            Float::with_val(prec, tau.atan() / Float::with_val(prec, 2))
+        };
         let c = crate::precision::cos(&theta);
         let s = crate::precision::sin(&theta);
 
@@ -529,6 +530,7 @@ fn diag_complex_hermitian_3x3(
 }
 
 /// Evaluate the determinant residual: det(M) - (-m_u m_c m_t) for given A value.
+#[allow(clippy::too_many_arguments)]
 fn det_residual(
     a_val: &Float,
     d1: &Float,
@@ -567,6 +569,7 @@ fn det_residual(
 /// Newton solve for A in the up-sector determinant constraint.
 /// Matches Python's findroot: start from sqrt(max(0, Asq_guess)), iterate
 /// with Newton's method using numerical derivative.
+#[allow(clippy::too_many_arguments)]
 fn newton_solve_a(
     d1: &Float,
     d2: &Float,

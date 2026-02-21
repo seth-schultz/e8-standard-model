@@ -106,7 +106,7 @@ checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
 name = "e8-cli"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "clap",
  "e8-core",
@@ -115,7 +115,7 @@ dependencies = [
 
 [[package]]
 name = "e8-core"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "itertools",
  "rug",

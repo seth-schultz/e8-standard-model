@@ -64,7 +64,7 @@ pub fn count_non_fano_triples() -> (u32, u32) {
     (fano_count, non_fano_count)
 }
 
-/// Compute ||T||² = sum over all ordered triples of |[eₐ,eᵦ,eᵧ]|².
+/// Compute ||T||² = sum over all ordered triples of |`[eₐ,eᵦ,eᵧ]`|².
 /// Should equal 672 = 7 × 96.
 pub fn total_associator_norm_squared() -> u64 {
     let mut total = 0u64;

@@ -10,7 +10,7 @@ use crate::algebra::groups::G2;
 use crate::precision::{pi, precision_bits};
 
 /// CKM CP phase: δ_CKM = m₂π/dim(G₂) = 5π/14 ≈ 64.3°.
-/// Origin: arg(C_Fritz) = π/dim(Im(O)) = π/7 from octonionic associator [e₆,e₃,e₁].
+/// Origin: arg(C_Fritz) = π/dim(Im(O)) = π/7 from octonionic associator `[e₆,e₃,e₁]`.
 /// Mapped to PDG convention: π/7 → 5π/14.
 pub fn delta_ckm_rad() -> Float {
     let prec = precision_bits();

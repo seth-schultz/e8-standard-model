@@ -108,7 +108,7 @@ mod tests {
                 if a != b {
                     let (sign, idx) = octonion_multiply(a, b);
                     assert!(sign == 1 || sign == -1);
-                    assert!(idx >= 1 && idx <= 7);
+                    assert!((1..=7).contains(&idx));
                 }
             }
         }

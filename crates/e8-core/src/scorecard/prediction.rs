@@ -77,6 +77,7 @@ pub struct Prediction {
 
 impl Prediction {
     /// Create a new prediction and compute pull/error.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         name: &str,
         category: Category,

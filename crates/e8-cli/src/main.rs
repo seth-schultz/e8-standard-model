@@ -62,8 +62,6 @@ fn format_value(v: f64) -> String {
         format!("{:.3e}", v)
     } else if abs >= 1000.0 {
         format!("{:.1}", v)
-    } else if abs >= 1.0 {
-        format!("{:.6}", v)
     } else {
         format!("{:.6}", v)
     }
@@ -151,8 +149,8 @@ fn run_scorecard(digits: u32, format: &str, quiet: bool) {
             let precision_floor: Vec<&Prediction> = predictions
                 .iter()
                 .filter(|p| {
-                    p.pull_sigma.map_or(false, |pull| pull.abs() > 100.0)
-                        && p.pct_error.map_or(false, |e| e.abs() < 1.0)
+                    p.pull_sigma.is_some_and(|pull| pull.abs() > 100.0)
+                        && p.pct_error.is_some_and(|e| e.abs() < 1.0)
                 })
                 .collect();
 
