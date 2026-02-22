@@ -32,7 +32,7 @@ pub fn m_gut_gev() -> Float {
 pub fn alpha_gut_inverse() -> Float {
     let prec = precision_bits();
     let sin2 = Float::with_val(prec, 3) / Float::with_val(prec, E8.rank);
-    let cf = cf_to_float(&crate::special::cf::ALPHA_CF_COEFFS);
+    let cf = cf_to_float::<Float>(&crate::special::cf::ALPHA_CF_COEFFS);
     let eng = exp_neg_gamma();
     Float::with_val(prec, Float::with_val(prec, sin2 * cf) * eng)
 }

@@ -1,8 +1,6 @@
 //! Continued fraction expansion and evaluation.
 
-use rug::Float;
-
-use crate::precision::precision_bits;
+use crate::precision::scalar::Scalar;
 
 /// Convert continued fraction coefficients [a0; a1, a2, ...] to rational p/q.
 /// Returns (numerator, denominator).
@@ -23,13 +21,10 @@ pub fn cf_to_rational(coeffs: &[u64]) -> (u64, u64) {
     (p_curr, q_curr)
 }
 
-/// Evaluate continued fraction [a0; a1, a2, ...] as a high-precision float ratio.
-pub fn cf_to_float(coeffs: &[u64]) -> Float {
+/// Evaluate continued fraction [a0; a1, a2, ...] as a scalar ratio.
+pub fn cf_to_float<S: Scalar>(coeffs: &[u64]) -> S {
     let (p, q) = cf_to_rational(coeffs);
-    let prec = precision_bits();
-    let pf = Float::with_val(prec, p);
-    let qf = Float::with_val(prec, q);
-    pf / qf
+    S::from_u64(p) / S::from_u64(q)
 }
 
 /// The alpha continued fraction tower: [244; 14, 13, 193].
@@ -86,8 +81,15 @@ mod tests {
     #[test]
     fn test_cf_to_float() {
         crate::precision::set_precision(50);
-        let val = cf_to_float(&ALPHA_CF_COEFFS);
+        let val: rug::Float = cf_to_float(&ALPHA_CF_COEFFS);
         let ratio = 8623762.0 / 35333.0;
         assert!((val.to_f64() - ratio).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_cf_to_float_f64() {
+        let val: f64 = cf_to_float(&ALPHA_CF_COEFFS);
+        let ratio = 8623762.0 / 35333.0;
+        assert!((val - ratio).abs() < 1e-10);
     }
 }

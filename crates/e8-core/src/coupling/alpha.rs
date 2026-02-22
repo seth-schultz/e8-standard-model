@@ -15,7 +15,7 @@ use crate::special::cf::{cf_to_float, ALPHA_CF_COEFFS};
 
 /// Compute 1/α at full precision.
 pub fn alpha_inverse() -> Float {
-    let cf_value = cf_to_float(&ALPHA_CF_COEFFS); // 44665/183
+    let cf_value = cf_to_float::<Float>(&ALPHA_CF_COEFFS); // 44665/183
     let eng = exp_neg_gamma();
     Float::with_val(precision_bits(), cf_value * eng)
 }

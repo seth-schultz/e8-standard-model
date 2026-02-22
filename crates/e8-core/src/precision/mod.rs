@@ -1,4 +1,27 @@
-//! Adaptive precision arithmetic backend using rug/MPFR.
+//! Adaptive precision arithmetic backend.
+//!
+//! The [`Scalar`] trait abstracts over number types. With the default
+//! `arbitrary-precision` feature, `rug::Float` is the `DefaultScalar`.
+//! Without it, `f64` is used.
+
+pub mod scalar;
+
+#[cfg(feature = "arbitrary-precision")]
+mod scalar_mpfr;
+
+pub use scalar::Scalar;
+
+/// The default scalar type used throughout E8 computations.
+#[cfg(feature = "arbitrary-precision")]
+pub type DefaultScalar = rug::Float;
+
+/// The default scalar type used throughout E8 computations (f64 mode).
+#[cfg(not(feature = "arbitrary-precision"))]
+pub type DefaultScalar = f64;
+
+// ─────────────────────────────────────────────────────────────────────
+// Legacy API (unchanged, still used throughout the codebase)
+// ─────────────────────────────────────────────────────────────────────
 
 use rug::float::Round;
 use rug::ops::{AssignRound, Pow};
@@ -142,9 +165,9 @@ pub fn pow(base: &Float, exp: &Float) -> Float {
 pub fn powi(base: &Float, n: i32) -> Float {
     let prec = precision_bits();
     if n >= 0 {
-        Float::with_val(prec, base.pow(n as u32))
+        Float::with_val(prec, Pow::pow(base, n as u32))
     } else {
-        Float::with_val(prec, base.pow((-n) as u32)).recip()
+        Float::with_val(prec, Pow::pow(base, (-n) as u32)).recip()
     }
 }
 
