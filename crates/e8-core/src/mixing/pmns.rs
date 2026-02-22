@@ -6,48 +6,43 @@
 //! sin²θ₁₂ = tan(m₂π/|W|)/|W| = tan(5π/12)/12 = (2+√3)/12
 //! sin²θ₂₃ = rank × tan(m₁π/|W|) = 2tan(π/12) = 4-2√3
 
-use rug::Float;
-
 use crate::algebra::groups::G2;
-use crate::precision::{pi, precision_bits, tan};
+use crate::precision::scalar::Scalar;
 
 /// PMNS sin²θ₁₃ = tan(m₁π/|W(G₂)|)/|W(G₂)| = (2-√3)/12 ≈ 0.02233.
-pub fn sin2_theta13() -> Float {
-    let prec = precision_bits();
+pub fn sin2_theta13<S: Scalar>() -> S {
     let w = G2.weyl_order; // |W(G₂)| = 12
     let m1 = G2.exponents[0]; // m₁ = 1
-    let angle = Float::with_val(prec, m1) * pi() / Float::with_val(prec, w);
-    tan(&angle) / Float::with_val(prec, w)
+    let angle = S::from_u64(m1 as u64) * S::pi() / S::from_u64(w);
+    angle.tan() / S::from_u64(w)
 }
 
 /// PMNS sin²θ₁₂ = tan(m₂π/|W(G₂)|)/|W(G₂)| = (2+√3)/12 ≈ 0.3110.
-pub fn sin2_theta12() -> Float {
-    let prec = precision_bits();
+pub fn sin2_theta12<S: Scalar>() -> S {
     let w = G2.weyl_order; // |W(G₂)| = 12
     let m2 = G2.exponents[1]; // m₂ = 5
-    let angle = Float::with_val(prec, m2) * pi() / Float::with_val(prec, w);
-    tan(&angle) / Float::with_val(prec, w)
+    let angle = S::from_u64(m2 as u64) * S::pi() / S::from_u64(w);
+    angle.tan() / S::from_u64(w)
 }
 
 /// PMNS sin²θ₂₃ = rank(G₂) × tan(m₁π/|W(G₂)|) = 2(2-√3) = 4-2√3 ≈ 0.5359.
-pub fn sin2_theta23() -> Float {
-    let prec = precision_bits();
+pub fn sin2_theta23<S: Scalar>() -> S {
     let w = G2.weyl_order; // |W(G₂)| = 12
     let m1 = G2.exponents[0]; // m₁ = 1
-    let angle = Float::with_val(prec, m1) * pi() / Float::with_val(prec, w);
-    Float::with_val(prec, G2.rank) * tan(&angle)
+    let angle = S::from_u64(m1 as u64) * S::pi() / S::from_u64(w);
+    S::from_u64(G2.rank as u64) * angle.tan()
 }
 
 /// Verify the G₂ Coxeter rules:
 /// 1. sum(s₁₂² + s₁₃²) = rank/h = 2/6 = 1/3
 /// 2. prod(s₁₂² × s₁₃²) = 1/|W|² = 1/144
 /// 3. Discriminant 48² - 576 = 1728 = |W|³ = 12³
-pub fn verify_coxeter_rules() -> (Float, Float) {
-    let s12 = sin2_theta12();
-    let s13 = sin2_theta13();
+pub fn verify_coxeter_rules<S: Scalar>() -> (S, S) {
+    let s12: S = sin2_theta12();
+    let s13: S = sin2_theta13();
 
-    let sum = Float::with_val(precision_bits(), &s12 + &s13);
-    let prod = Float::with_val(precision_bits(), &s12 * &s13);
+    let sum = s12.clone() + s13.clone();
+    let prod = s12 * s13;
 
     (sum, prod)
 }
@@ -61,9 +56,13 @@ mod tests {
     fn test_pmns_angles() {
         set_precision(50);
 
-        let s13 = sin2_theta13().to_f64();
-        let s12 = sin2_theta12().to_f64();
-        let s23 = sin2_theta23().to_f64();
+        let s13: rug::Float = sin2_theta13();
+        let s12: rug::Float = sin2_theta12();
+        let s23: rug::Float = sin2_theta23();
+
+        let s13 = s13.to_f64();
+        let s12 = s12.to_f64();
+        let s23 = s23.to_f64();
 
         // Experimental: sin²θ₁₃ = 0.02220 ± 0.00068
         assert!(
@@ -90,7 +89,7 @@ mod tests {
     #[test]
     fn test_coxeter_rules() {
         set_precision(50);
-        let (sum, prod) = verify_coxeter_rules();
+        let (sum, prod): (rug::Float, rug::Float) = verify_coxeter_rules();
 
         // sum = rank/h = 2/6 = 1/3
         let sum_err = (sum.to_f64() - 1.0 / 3.0).abs();

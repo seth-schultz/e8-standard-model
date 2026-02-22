@@ -58,7 +58,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     ));
 
     // #3: α_s(M_Z)
-    let as_val = alpha_s_mz().to_f64();
+    let as_val = alpha_s_mz::<rug::Float>().to_f64();
     results.push(Prediction::new(
         "α_s(M_Z)",
         Category::Gauge,
@@ -296,7 +296,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     }
 
     // #27: δ_CKM
-    let d_ckm = delta_ckm_deg().to_f64();
+    let d_ckm = delta_ckm_deg::<rug::Float>().to_f64();
     results.push(Prediction::new(
         "δ_CKM",
         Category::CKM,
@@ -323,9 +323,9 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     // ═══════════════════════════════════════════════════════════
     // #29-32: PMNS MIXING
     // ═══════════════════════════════════════════════════════════
-    let s12 = sin2_theta12().to_f64();
-    let s23 = sin2_theta23().to_f64();
-    let s13 = sin2_theta13().to_f64();
+    let s12 = sin2_theta12::<rug::Float>().to_f64();
+    let s23 = sin2_theta23::<rug::Float>().to_f64();
+    let s13 = sin2_theta13::<rug::Float>().to_f64();
 
     // #29: sin²θ₁₂
     results.push(Prediction::new(
@@ -364,7 +364,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     ));
 
     // #32: δ_PMNS
-    let d_pmns = delta_pmns_deg().to_f64();
+    let d_pmns = delta_pmns_deg::<rug::Float>().to_f64();
     results.push(Prediction::new(
         "δ_PMNS",
         Category::PMNS,
@@ -553,7 +553,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     ));
 
     // #48: M_GUT
-    let m_gut = m_gut_gev().to_f64();
+    let m_gut = m_gut_gev::<rug::Float>().to_f64();
     results.push(Prediction::new(
         "M_GUT",
         Category::Structural,
