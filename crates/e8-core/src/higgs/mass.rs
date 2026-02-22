@@ -25,7 +25,7 @@ pub fn higgs_mass_gev(m_t_gev: &Float) -> Float {
 /// Compute m_H using the E8-predicted top mass from Koide.
 pub fn higgs_mass_default() -> Float {
     let prec = precision_bits();
-    let masses = crate::mass::sectors::compute_all_masses();
+    let masses = crate::mass::sectors::compute_all_masses::<Float>();
     // Convert predicted m_t from MeV to GeV
     let m_t = Float::with_val(prec, &masses.top / Float::with_val(prec, 1000));
     higgs_mass_gev(&m_t)

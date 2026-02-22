@@ -86,7 +86,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     // ═══════════════════════════════════════════════════════════
     // #5-13: FERMION MASSES (MeV)
     // ═══════════════════════════════════════════════════════════
-    let masses = compute_all_masses();
+    let masses = compute_all_masses::<rug::Float>();
 
     // #5: m_e
     let m_e = masses.electron.to_f64();

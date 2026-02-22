@@ -28,7 +28,7 @@ pub struct CKMResult {
 
 /// Build the full CKM matrix from quark masses (zero free parameters).
 #[allow(clippy::needless_range_loop)]
-pub fn build_ckm(masses: &AllMasses) -> CKMResult {
+pub fn build_ckm(masses: &AllMasses<Float>) -> CKMResult {
     let prec = precision_bits();
 
     let m_u = &masses.up;
@@ -677,7 +677,7 @@ mod tests {
     #[test]
     fn test_ckm_magnitudes() {
         set_precision(50);
-        let masses = compute_all_masses();
+        let masses = compute_all_masses::<Float>();
         let ckm = build_ckm(&masses);
 
         // Python reference: V_ud=0.974466, V_us=0.224507, V_ub=0.003631

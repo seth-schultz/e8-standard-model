@@ -2,19 +2,17 @@
 //!
 //! CRITICAL: m_k = M² × val² even when val < 0 (sign-flip for quarks).
 
-use rug::Float;
-
-use crate::precision::{cos, pi, precision_bits, sqrt};
+use crate::precision::scalar::Scalar;
 
 /// Koide sector parameters.
 #[derive(Debug, Clone)]
-pub struct KoideParams {
+pub struct KoideParams<S: Scalar> {
     /// r⁴ value (determines the Koide ratio)
-    pub r_fourth: Float,
+    pub r_fourth: S,
     /// Koide phase φ
-    pub phi: Float,
+    pub phi: S,
     /// Sector mass sum Σ in MeV
-    pub sigma: Float,
+    pub sigma: S,
 }
 
 /// Compute three masses from Koide parametrization.
@@ -24,72 +22,73 @@ pub struct KoideParams {
 ///   M² = 2Σ/(6 + 3r²)
 ///   √m_k = M × (1 + r × cos(2πk/3 + φ))
 ///   m_k = M² × val_k²  (val_k can be negative!)
-pub fn koide_masses(params: &KoideParams) -> [Float; 3] {
-    let prec = precision_bits();
-    let two = Float::with_val(prec, 2);
-    let three = Float::with_val(prec, 3);
-    let six = Float::with_val(prec, 6);
-    let two_pi_3 = &two * pi() / &three;
+pub fn koide_masses<S: Scalar>(params: &KoideParams<S>) -> [S; 3] {
+    let two = S::from_u64(2);
+    let three = S::from_u64(3);
+    let six = S::from_u64(6);
+    let two_pi_3 = two.clone() * S::pi() / three.clone();
 
     // r = (r⁴)^{1/4}
-    let r = sqrt(&sqrt(&params.r_fourth));
+    let r = params.r_fourth.sqrt().sqrt();
 
     // M² = 2Σ/(6 + 3r²)
-    let r_sq = Float::with_val(prec, &r * &r);
-    let denominator = Float::with_val(prec, &six + Float::with_val(prec, &three * &r_sq));
-    let m_sq = Float::with_val(prec, &two * &params.sigma) / denominator;
+    let r_sq = r.clone() * r.clone();
+    let denominator = six + three * r_sq;
+    let m_sq = two * params.sigma.clone() / denominator;
 
-    let mut masses = [
-        Float::with_val(prec, 0),
-        Float::with_val(prec, 0),
-        Float::with_val(prec, 0),
-    ];
+    // Compute masses for k=0,1,2
+    let m0 = {
+        let angle = params.phi.clone();
+        let val = S::one() + r.clone() * angle.cos();
+        m_sq.clone() * val.clone() * val
+    };
+    let m1 = {
+        let angle = two_pi_3.clone() + params.phi.clone();
+        let val = S::one() + r.clone() * angle.cos();
+        m_sq.clone() * val.clone() * val
+    };
+    let m2 = {
+        let angle = two_pi_3.clone() + two_pi_3 + params.phi.clone();
+        let val = S::one() + r * angle.cos();
+        m_sq * val.clone() * val
+    };
 
-    for (k, mass) in masses.iter_mut().enumerate() {
-        let angle = Float::with_val(prec, &two_pi_3 * k as u32) + &params.phi;
-        let val = Float::with_val(prec, 1) + &r * cos(&angle);
-        // m_k = M² × val² — CRITICAL: this is val², so negative val gives positive mass
-        *mass = Float::with_val(prec, Float::with_val(prec, &m_sq * &val) * &val);
-    }
-
-    masses
+    [m0, m1, m2]
 }
 
 /// Compute the Koide quality parameter Q = (Σ√m)²/(3Σm).
 /// For leptons: Q = 2/3 exactly (theorem).
-pub fn koide_q(m1: &Float, m2: &Float, m3: &Float) -> Float {
-    let prec = precision_bits();
-    let s1 = sqrt(m1);
-    let s2 = sqrt(m2);
-    let s3 = sqrt(m3);
+pub fn koide_q<S: Scalar>(m1: &S, m2: &S, m3: &S) -> S {
+    let s1 = m1.sqrt();
+    let s2 = m2.sqrt();
+    let s3 = m3.sqrt();
 
-    let sum_sqrt = Float::with_val(prec, Float::with_val(prec, &s1 + &s2) + &s3);
-    let sum_sqrt_sq = Float::with_val(prec, &sum_sqrt * &sum_sqrt);
+    let sum_sqrt = s1 + s2 + s3;
+    let sum_sqrt_sq = sum_sqrt.clone() * sum_sqrt;
 
-    let sum_m = Float::with_val(prec, Float::with_val(prec, m1 + m2) + m3);
-    let three = Float::with_val(prec, 3);
+    let sum_m = m1.clone() + m2.clone() + m3.clone();
 
-    sum_sqrt_sq / (three * sum_m)
+    sum_sqrt_sq / (S::from_u64(3) * sum_m)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::precision::{mpf_u64, set_precision};
+    use crate::precision::set_precision;
+    use crate::precision::scalar::Scalar;
 
     #[test]
     fn test_lepton_koide() {
         set_precision(50);
-        let prec = precision_bits();
 
         // Experimental lepton masses
-        let sigma = Float::with_val(prec, 0.51099895f64)
-            + Float::with_val(prec, 105.6583755f64)
-            + Float::with_val(prec, 1776.86f64);
+        let sigma = rug::Float::from_f64(0.51099895)
+            + rug::Float::from_f64(105.6583755)
+            + rug::Float::from_f64(1776.86);
 
         let params = KoideParams {
-            r_fourth: mpf_u64(4), // r⁴ = 4 → r = √2
-            phi: Float::with_val(prec, 2) / Float::with_val(prec, 9), // φ = 2/9
+            r_fourth: rug::Float::from_u64(4), // r⁴ = 4 → r = √2
+            phi: rug::Float::from_u64(2) / rug::Float::from_u64(9), // φ = 2/9
             sigma,
         };
 

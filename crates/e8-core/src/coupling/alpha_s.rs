@@ -46,7 +46,7 @@ pub fn alpha_gut_inverse() -> Float {
 ///                        + b₃⁽⁵⁾/(2π) ln(M_Z/m_t)
 pub fn alpha_s_mz() -> Float {
     // Use the E8-predicted top mass
-    let masses = crate::mass::sectors::compute_all_masses();
+    let masses = crate::mass::sectors::compute_all_masses::<Float>();
     let m_t_mev = &masses.top;
     let m_t_gev = Float::with_val(precision_bits(), m_t_mev / Float::with_val(precision_bits(), 1000));
     alpha_s_mz_with_mt(&m_t_gev)
