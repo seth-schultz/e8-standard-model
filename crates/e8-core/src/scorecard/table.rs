@@ -20,7 +20,8 @@ use crate::mass::sectors::compute_all_masses;
 use crate::mixing::ckm::build_ckm;
 use crate::mixing::cp_phase::{delta_ckm_deg, delta_pmns_deg};
 use crate::mixing::pmns::{sin2_theta12, sin2_theta13, sin2_theta23};
-use crate::precision::set_precision;
+use crate::precision::scalar::Scalar;
+use crate::precision::{set_precision, DefaultScalar};
 
 /// Compute the full scorecard of all 49 quantities.
 pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
@@ -32,7 +33,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     // ═══════════════════════════════════════════════════════════
 
     // #1: 1/α(0)
-    let alpha_inv = alpha_inverse::<rug::Float>().to_f64();
+    let alpha_inv = alpha_inverse::<DefaultScalar>().to_f64();
     results.push(Prediction::new(
         "1/α(0)",
         Category::Gauge,
@@ -45,7 +46,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     ));
 
     // #2: sin²θ_W(M_Z)
-    let s2w_mz = sin2_theta_w_mz::<rug::Float>().to_f64();
+    let s2w_mz = sin2_theta_w_mz::<DefaultScalar>().to_f64();
     results.push(Prediction::new(
         "sin²θ_W(M_Z)",
         Category::Gauge,
@@ -58,7 +59,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     ));
 
     // #3: α_s(M_Z)
-    let as_val = alpha_s_mz::<rug::Float>().to_f64();
+    let as_val = alpha_s_mz::<DefaultScalar>().to_f64();
     results.push(Prediction::new(
         "α_s(M_Z)",
         Category::Gauge,
@@ -71,7 +72,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     ));
 
     // #4: sin²θ_W(GUT) — THEOREM
-    let s2w_gut = sin2_theta_w_gut::<rug::Float>().to_f64();
+    let s2w_gut = sin2_theta_w_gut::<DefaultScalar>().to_f64();
     results.push(Prediction::new(
         "sin²θ_W(GUT)",
         Category::Gauge,
@@ -86,7 +87,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     // ═══════════════════════════════════════════════════════════
     // #5-13: FERMION MASSES (MeV)
     // ═══════════════════════════════════════════════════════════
-    let masses = compute_all_masses::<rug::Float>();
+    let masses = compute_all_masses::<DefaultScalar>();
 
     // #5: m_e
     let m_e = masses.electron.to_f64();
@@ -296,7 +297,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     }
 
     // #27: δ_CKM
-    let d_ckm = delta_ckm_deg::<rug::Float>().to_f64();
+    let d_ckm = delta_ckm_deg::<DefaultScalar>().to_f64();
     results.push(Prediction::new(
         "δ_CKM",
         Category::CKM,
@@ -323,9 +324,9 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     // ═══════════════════════════════════════════════════════════
     // #29-32: PMNS MIXING
     // ═══════════════════════════════════════════════════════════
-    let s12 = sin2_theta12::<rug::Float>().to_f64();
-    let s23 = sin2_theta23::<rug::Float>().to_f64();
-    let s13 = sin2_theta13::<rug::Float>().to_f64();
+    let s12 = sin2_theta12::<DefaultScalar>().to_f64();
+    let s23 = sin2_theta23::<DefaultScalar>().to_f64();
+    let s13 = sin2_theta13::<DefaultScalar>().to_f64();
 
     // #29: sin²θ₁₂
     results.push(Prediction::new(
@@ -364,7 +365,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     ));
 
     // #32: δ_PMNS
-    let d_pmns = delta_pmns_deg::<rug::Float>().to_f64();
+    let d_pmns = delta_pmns_deg::<DefaultScalar>().to_f64();
     results.push(Prediction::new(
         "δ_PMNS",
         Category::PMNS,
@@ -419,7 +420,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     // ═══════════════════════════════════════════════════════════
 
     // #38: m_H
-    let m_h = higgs_mass_default::<rug::Float>().to_f64();
+    let m_h = higgs_mass_default::<DefaultScalar>().to_f64();
     results.push(Prediction::new(
         "m_H",
         Category::Higgs,
@@ -432,7 +433,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     ));
 
     // #39: λ
-    let lambda = higgs_quartic::<rug::Float>().to_f64();
+    let lambda = higgs_quartic::<DefaultScalar>().to_f64();
     results.push(Prediction::new(
         "λ_H",
         Category::Higgs,
@@ -445,7 +446,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     ));
 
     // #40: m_S (second scalar)
-    let m_h_float = higgs_mass_default::<rug::Float>();
+    let m_h_float = higgs_mass_default::<DefaultScalar>();
     let m_s_val = second_scalar_mass(&m_h_float).to_f64();
     results.push(Prediction::new(
         "m_S",
@@ -536,11 +537,9 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
 
     // #47: y_t = √2 × m_t / v — top Yukawa coupling
     // v = 246.22 GeV (experimental VEV), m_t from E8 prediction
-    let m_t_mpfr = &masses.top;
-    let v_mev = crate::precision::mpf_f64(246220.0); // 246.22 GeV in MeV
-    let sqrt2 = crate::precision::sqrt(&crate::precision::mpf_u64(2));
-    let y_t_mpfr = (sqrt2 * m_t_mpfr) / &v_mev;
-    let y_t = y_t_mpfr.to_f64();
+    let v_mev = DefaultScalar::from_f64(246220.0); // 246.22 GeV in MeV
+    let sqrt2 = DefaultScalar::from_u64(2).sqrt();
+    let y_t = (sqrt2 * masses.top.clone() / v_mev).to_f64();
     results.push(Prediction::new(
         "y_t",
         Category::Structural,
@@ -553,7 +552,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     ));
 
     // #48: M_GUT
-    let m_gut = m_gut_gev::<rug::Float>().to_f64();
+    let m_gut = m_gut_gev::<DefaultScalar>().to_f64();
     results.push(Prediction::new(
         "M_GUT",
         Category::Structural,
