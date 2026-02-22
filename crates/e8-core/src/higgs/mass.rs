@@ -1,33 +1,27 @@
 //! Higgs boson mass: m_H = v × √(2λ) with v = √2 × m_t (y_t = 1).
 
-use rug::Float;
-
-use crate::precision::{precision_bits, sqrt};
+use crate::precision::scalar::Scalar;
 
 use super::quartic::higgs_quartic;
 
 /// Higgs VEV: v = √2 × m_t (consequence of y_t = 1 from E8).
 /// m_t in GeV.
-pub fn higgs_vev_gev(m_t_gev: &Float) -> Float {
-    let prec = precision_bits();
-    sqrt(&Float::with_val(prec, 2)) * m_t_gev
+pub fn higgs_vev_gev<S: Scalar>(m_t_gev: &S) -> S {
+    S::from_u64(2).sqrt() * m_t_gev.clone()
 }
 
 /// Higgs mass: m_H = v × √(2λ) in GeV.
-pub fn higgs_mass_gev(m_t_gev: &Float) -> Float {
-    let prec = precision_bits();
+pub fn higgs_mass_gev<S: Scalar>(m_t_gev: &S) -> S {
     let v = higgs_vev_gev(m_t_gev);
-    let lambda = higgs_quartic();
-    let two_lambda = Float::with_val(prec, 2) * lambda;
-    v * sqrt(&two_lambda)
+    let lambda: S = higgs_quartic();
+    let two_lambda = S::from_u64(2) * lambda;
+    v * two_lambda.sqrt()
 }
 
 /// Compute m_H using the E8-predicted top mass from Koide.
-pub fn higgs_mass_default() -> Float {
-    let prec = precision_bits();
-    let masses = crate::mass::sectors::compute_all_masses::<Float>();
-    // Convert predicted m_t from MeV to GeV
-    let m_t = Float::with_val(prec, &masses.top / Float::with_val(prec, 1000));
+pub fn higgs_mass_default<S: Scalar>() -> S {
+    let masses = crate::mass::sectors::compute_all_masses::<S>();
+    let m_t = masses.top / S::from_u64(1000);
     higgs_mass_gev(&m_t)
 }
 
@@ -35,11 +29,12 @@ pub fn higgs_mass_default() -> Float {
 mod tests {
     use super::*;
     use crate::precision::set_precision;
+    use crate::precision::scalar::Scalar;
 
     #[test]
     fn test_higgs_mass() {
         set_precision(50);
-        let mh = higgs_mass_default();
+        let mh: rug::Float = higgs_mass_default();
         let val = mh.to_f64();
         // Experimental: 125.25 ± 0.17 GeV
         assert!(
@@ -52,8 +47,7 @@ mod tests {
     #[test]
     fn test_higgs_vev() {
         set_precision(50);
-        let prec = precision_bits();
-        let m_t = Float::with_val(prec, 172.76f64);
+        let m_t = rug::Float::from_f64(172.76);
         let v = higgs_vev_gev(&m_t);
         let val = v.to_f64();
         // v ≈ 244 GeV (≈ √2 × 172.76)

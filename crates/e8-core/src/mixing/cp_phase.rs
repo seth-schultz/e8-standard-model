@@ -43,7 +43,6 @@ pub fn fritzsch_phase<S: Scalar>() -> S {
 mod tests {
     use super::*;
     use crate::precision::set_precision;
-    use crate::precision::scalar::Scalar;
 
     #[test]
     fn test_delta_ckm() {

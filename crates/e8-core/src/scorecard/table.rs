@@ -419,7 +419,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     // ═══════════════════════════════════════════════════════════
 
     // #38: m_H
-    let m_h = higgs_mass_default().to_f64();
+    let m_h = higgs_mass_default::<rug::Float>().to_f64();
     results.push(Prediction::new(
         "m_H",
         Category::Higgs,
@@ -432,7 +432,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     ));
 
     // #39: λ
-    let lambda = higgs_quartic().to_f64();
+    let lambda = higgs_quartic::<rug::Float>().to_f64();
     results.push(Prediction::new(
         "λ_H",
         Category::Higgs,
@@ -445,7 +445,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     ));
 
     // #40: m_S (second scalar)
-    let m_h_float = higgs_mass_default();
+    let m_h_float = higgs_mass_default::<rug::Float>();
     let m_s_val = second_scalar_mass(&m_h_float).to_f64();
     results.push(Prediction::new(
         "m_S",
