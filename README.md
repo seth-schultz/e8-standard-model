@@ -104,7 +104,7 @@ Nothing is fitted. No parameters are adjusted to match experiment. The only phys
 
 ### Prerequisites
 
-This library uses [rug](https://crates.io/crates/rug) for arbitrary-precision arithmetic (GMP/MPFR), which requires C libraries.
+By default, e8-core uses [rug](https://crates.io/crates/rug) (GMP/MPFR) for arbitrary-precision arithmetic. This requires C libraries:
 
 **macOS:**
 ```bash
@@ -121,6 +121,8 @@ apt install libgmp-dev libmpfr-dev libmpc-dev
 dnf install gmp-devel mpfr-devel libmpc-devel
 ```
 
+**No C dependencies?** Use f64-only mode (see [Feature Flags](#feature-flags)).
+
 ### Build and run
 
 ```bash
@@ -130,7 +132,7 @@ cargo build --release
 ./target/release/e8-standard-model scorecard
 ```
 
-### As a library
+### As a Rust library
 
 Add to your `Cargo.toml`:
 ```toml
@@ -138,51 +140,160 @@ Add to your `Cargo.toml`:
 e8-core = { git = "https://github.com/seth-schultz/e8-standard-model" }
 ```
 
+For f64-only (no GMP/MPFR required):
+```toml
+[dependencies]
+e8-core = { git = "https://github.com/seth-schultz/e8-standard-model", default-features = false }
+```
+
+### Python
+
+Requires Rust toolchain and [maturin](https://www.maturin.rs/):
+
+```bash
+pip install maturin
+cd crates/e8-python
+maturin develop --release
+```
+
+```python
+import e8
+
+model = e8.E8StandardModel(digits=50)
+
+# All 49 predictions
+for p in model.scorecard():
+    print(f"{p.name}: {p.predicted:.6f} {p.unit}")
+
+# Individual quantities
+print(f"1/α = {model.alpha_inverse()}")
+print(f"m_H = {model.higgs_mass():.4f} GeV")
+
+# All 12 fermion masses
+m = model.masses()
+print(f"m_e = {m.electron:.6f} MeV")
+print(f"m_t = {m.top:.2f} MeV")
+```
+
+## Feature Flags
+
+| Feature | Default | Description |
+|---|---|---|
+| `arbitrary-precision` | **on** | 250+ digit precision via MPFR. Requires GMP/MPFR C libraries. |
+
+With `arbitrary-precision` disabled, all computations use f64 (~15 significant digits). Predictions agree with the MPFR reference values to within 1e-8 relative error — more than sufficient for physical interpretation.
+
+```bash
+# Build/test without C dependencies
+cargo test -p e8-core --no-default-features
+```
+
 ## Usage
 
-### Library API
+### Rust SDK
+
+e8-core is a generic SDK. All physics computations are parameterized over `S: Scalar`, an abstraction over numeric types (`f64` or `rug::Float`). The E8 theory is the default implementation — you can plug in different lattices, mass formulas, mixing textures, or gauge couplings.
+
+#### Quick start
 
 ```rust
+use e8_core::prelude::*;
 use e8_core::precision::set_precision;
-use e8_core::scorecard::table::compute_scorecard;
 
-// Set working precision (decimal digits)
-set_precision(250);
+set_precision(50);
 
-// Compute all 49 quantities
-let predictions = compute_scorecard(250);
+// The E8 Standard Model: 49 quantities, 0 free parameters
+let model = e8_standard_model();
+let masses: AllMasses<DefaultScalar> = model.masses();
+println!("m_e = {:.6} MeV", masses.electron.to_f64());
+println!("m_t = {:.2} MeV", masses.top.to_f64());
+```
+
+#### Scorecard
+
+```rust
+use e8_core::prelude::*;
+
+let predictions = compute_scorecard(50);
 for p in &predictions {
-    println!("{}: {:.6}", p.name, p.predicted);
+    println!("{}: {:.6} {}", p.name, p.predicted, p.unit);
 }
 ```
 
 #### Individual computations
 
 ```rust
+use e8_core::prelude::*;
 use e8_core::precision::set_precision;
 
-set_precision(250);
+set_precision(50);
 
-// Fine structure constant from CF tower: [244; 14, 13, 193] * e^{-gamma}
-let alpha_inv = e8_core::coupling::alpha::alpha_inverse();
-println!("1/alpha = {:.12}", alpha_inv.to_f64());
+// Fine structure constant
+let alpha_inv: DefaultScalar = e8_core::coupling::alpha::alpha_inverse();
+println!("1/α = {:.12}", alpha_inv.to_f64());
 
-// All 12 fermion masses from E8 mass formula + Koide parametrization
-let masses = e8_core::mass::sectors::compute_all_masses();
-println!("m_e = {:.12} MeV", masses.electron.to_f64());
-println!("m_t = {:.4} MeV", masses.top.to_f64());
-
-// CKM matrix from Fritzsch texture + octonionic CP phase
+// CKM matrix
+let masses: AllMasses<DefaultScalar> = e8_core::mass::sectors::compute_all_masses();
 let ckm = e8_core::mixing::ckm::build_ckm(&masses);
 println!("V_us = {:.6}", ckm.magnitudes[1].to_f64());
 
-// PMNS mixing angles from G2 Coxeter geometry
-let s13 = e8_core::mixing::pmns::sin2_theta13();
-println!("sin^2(theta_13) = {:.6}", s13.to_f64());
+// PMNS mixing
+let s13: DefaultScalar = e8_core::mixing::pmns::sin2_theta13();
+println!("sin²θ₁₃ = {:.6}", s13.to_f64());
 
-// Higgs mass from lambda = 7 pi^4 / 72^2
-let m_h = e8_core::higgs::mass::higgs_mass_default();
+// Higgs mass
+let m_h: DefaultScalar = e8_core::higgs::mass::higgs_mass_default();
 println!("m_H = {:.4} GeV", m_h.to_f64());
+```
+
+#### Parameter overrides
+
+Every group-theoretic constant is overridable via `OverrideContext`, allowing scientists to test alternative theories without modifying code:
+
+```rust
+use e8_core::prelude::*;
+use e8_core::override_context::OverrideContext;
+use e8_core::precision::set_precision;
+
+set_precision(50);
+
+// "What if the lepton A-value were 10 instead of 9?"
+let mut params = std::collections::HashMap::new();
+params.insert("a_lepton".to_string(), 10.0);
+let ctx = OverrideContext::from_params(params).unwrap();
+
+let predictions = e8_core::scorecard::table::compute_scorecard_with_ctx(50, &ctx);
+```
+
+~40 parameters are overridable across mass formula A-values/f-factors, Koide parameters, gauge couplings, mixing angles, and Higgs sector. See `OverrideContext::parameter_catalog()` for the full list with descriptions, defaults, and valid ranges.
+
+#### Physics traits
+
+Each physics module exposes a trait for extensibility:
+
+| Trait | Default impl | What it computes |
+|---|---|---|
+| `RootSystem` | `E8RootSystem` | Root vectors, norms, inner products |
+| `LieAlgebra` | `LieGroup` | Dimensions, Casimirs, Coxeter numbers |
+| `MassFormula` | `E8MassFormula` | Sector mass sums Σ = f·m_P·exp(-(AR+δ)/28) |
+| `MassSplitting` | `KoideSplitting` | Individual masses from sector sums |
+| `CKMMixing` | `FritzschCKM` | Quark mixing matrix from Fritzsch texture |
+| `PMNSMixing` | `G2PMNS` | Lepton mixing from G₂ Coxeter geometry |
+| `GaugeCouplings` | `E8GaugeCouplings` | α, sin²θ_W, α_s |
+| `HiggsSector` | `E8HiggsSector` | m_H, λ_H, m_S |
+
+Implement a trait to substitute your own physics while reusing the rest of the framework.
+
+#### Theory composition
+
+```rust
+use e8_core::prelude::*;
+
+// The default E8 model composes all default implementations
+let model: E8StandardModel = e8_standard_model();
+
+// Or compose your own theory with custom components:
+// let model = Theory::new(my_roots, my_mass_formula, my_splitting, ...);
 ```
 
 ### CLI
@@ -214,16 +325,21 @@ e8-standard-model info
 
 ```
 e8-core/src/
-  precision/    Arbitrary-precision arithmetic via MPFR (250+ digits, configurable)
-  lattice/      E8 root system: 240 roots, traces, plaquettes, D4 coset decomposition
-  algebra/      Lie algebra invariants: E8, G2, SU(5), SU(3), SU(2), embedding indices
-  octonion/     Fano plane multiplication, associator [e_a,e_b,e_c], generation assignment
-  mass/         Unified mass formula + Koide parametrization (12 fermion + 3 neutrino masses)
-  coupling/     Fine structure constant, Weinberg angle, alpha_s, RGE running
-  mixing/       CKM (Fritzsch texture + octonionic CP) and PMNS (G2 Coxeter geometry)
-  higgs/        Quartic coupling, Higgs mass, theta_QCD = 0
-  special/      Continued fractions, divisor sums, Eisenstein series
-  scorecard/    Master pipeline: all 49 quantities + PDG 2024 comparison
+  precision/         Scalar trait abstraction + MPFR/f64 backends
+    scalar.rs        Scalar trait: from_u64, exp, sin, sqrt, pi, ... + impl for f64
+    scalar_mpfr.rs   impl Scalar for rug::Float (behind arbitrary-precision feature)
+  lattice/           E8 root system: 240 roots, traces, plaquettes, D4 coset decomposition
+  algebra/           Lie algebra invariants: E8, G2, SU(5), SU(3), SU(2), embedding indices
+  octonion/          Fano plane multiplication, associator [e_a,e_b,e_c], generation assignment
+  mass/              Unified mass formula + Koide parametrization (12 fermion + 3 neutrino masses)
+  coupling/          Fine structure constant, Weinberg angle, alpha_s, RGE running
+  mixing/            CKM (Fritzsch texture + octonionic CP) and PMNS (G2 Coxeter geometry)
+  higgs/             Quartic coupling, Higgs mass, theta_QCD = 0
+  special/           Continued fractions, divisor sums, Eisenstein series
+  scorecard/         Master pipeline: all 49 quantities + PDG 2024 comparison
+  override_context.rs  Parameter override system (~40 overridable constants)
+  theory.rs          Generic Theory<S, R, MF, MS, CKM, PMNS, GC, HS> composition
+  prelude.rs         Convenient re-exports
 ```
 
 ### No magic numbers
@@ -239,7 +355,7 @@ The derivation chain is auditable directly from the source code.
 
 ### Precision
 
-Arithmetic uses [rug](https://crates.io/crates/rug) (Rust bindings to GNU MPFR) for arbitrary-precision floating point. Precision is configurable at runtime:
+With the `arbitrary-precision` feature (default), arithmetic uses [rug](https://crates.io/crates/rug) (GNU MPFR bindings). Precision is configurable at runtime:
 
 ```rust
 use e8_core::precision::set_precision;
@@ -248,7 +364,7 @@ set_precision(250);  // Match the reference derivation scripts
 set_precision(1000); // For mathematical verification
 ```
 
-The default is 250 decimal digits (~832 bits), matching the precision of the original derivation scripts. All intermediate quantities are computed at the requested precision — there are no f64 approximations in the computational core.
+Without `arbitrary-precision`, all computations use f64 (~15 digits). The `Scalar` trait abstracts over both backends — the same generic code runs at either precision.
 
 ### Performance
 
@@ -298,12 +414,13 @@ These predictions have no experimental measurement yet and provide falsifiable t
 ## Testing
 
 ```bash
-cargo test          # 74 tests: all mathematical identities, predictions, cross-checks
-cargo clippy        # Zero warnings
-cargo doc --no-deps # Zero warnings
+cargo test                              # 106 tests (arbitrary-precision mode)
+cargo test --no-default-features        # 96 tests (f64-only mode)
+cargo clippy                            # Zero warnings
+cargo doc --no-deps                     # Zero warnings
 ```
 
-74 unit tests verify every mathematical identity, mass prediction, mixing matrix element, and scorecard value.
+106 tests verify every mathematical identity, mass prediction, mixing matrix element, scorecard value, Scalar trait implementation, physics trait dispatch, and a 49-value regression gate that prevents numerical drift across refactoring.
 
 ## Paper
 
