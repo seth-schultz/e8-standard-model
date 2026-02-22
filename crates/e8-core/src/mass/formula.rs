@@ -14,10 +14,10 @@ use super::constants::{delta, m_planck_mev, mertens_r, norm_factor};
 /// * `a` - The representation quantum number (A-value)
 /// * `f` - The lattice gauge dressing factor
 pub fn sector_sum(a: u32, f: &Float) -> Float {
-    let r = mertens_r();
-    let d = delta();
-    let n28 = norm_factor();
-    let mp = m_planck_mev();
+    let r = mertens_r::<Float>();
+    let d = delta::<Float>();
+    let n28 = norm_factor::<Float>();
+    let mp = m_planck_mev::<Float>();
 
     let exponent = -(Float::with_val(precision_bits(), a) * &r + &d) / &n28;
     let boltzmann = exp(&exponent);

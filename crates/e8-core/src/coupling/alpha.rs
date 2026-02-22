@@ -8,22 +8,19 @@
 //! - a₂ = 13 = |W(G₂)| + 1 (prime)
 //! - a₃ = 193 = |W(D₄)| + 1 (prime)
 
-use rug::Float;
-
-use crate::precision::{exp_neg_gamma, precision_bits};
+use crate::precision::scalar::Scalar;
 use crate::special::cf::{cf_to_float, ALPHA_CF_COEFFS};
 
 /// Compute 1/α at full precision.
-pub fn alpha_inverse() -> Float {
-    let cf_value = cf_to_float::<Float>(&ALPHA_CF_COEFFS); // 44665/183
-    let eng = exp_neg_gamma();
-    Float::with_val(precision_bits(), cf_value * eng)
+pub fn alpha_inverse<S: Scalar>() -> S {
+    let cf_value: S = cf_to_float(&ALPHA_CF_COEFFS); // 44665/183
+    let eng = S::exp_neg_gamma();
+    cf_value * eng
 }
 
 /// Compute α at full precision.
-pub fn alpha() -> Float {
-    let prec = precision_bits();
-    Float::with_val(prec, 1) / alpha_inverse()
+pub fn alpha<S: Scalar>() -> S {
+    S::one() / alpha_inverse()
 }
 
 /// Verify the continued fraction decomposition:
@@ -44,7 +41,7 @@ mod tests {
     #[test]
     fn test_alpha_inverse() {
         set_precision(50);
-        let ai = alpha_inverse();
+        let ai: rug::Float = alpha_inverse();
         let val = ai.to_f64();
         // Should be very close to 137.035999177
         assert!(

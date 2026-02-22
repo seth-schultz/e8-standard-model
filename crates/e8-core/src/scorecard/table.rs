@@ -32,7 +32,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     // ═══════════════════════════════════════════════════════════
 
     // #1: 1/α(0)
-    let alpha_inv = alpha_inverse().to_f64();
+    let alpha_inv = alpha_inverse::<rug::Float>().to_f64();
     results.push(Prediction::new(
         "1/α(0)",
         Category::Gauge,
@@ -45,7 +45,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     ));
 
     // #2: sin²θ_W(M_Z)
-    let s2w_mz = sin2_theta_w_mz().to_f64();
+    let s2w_mz = sin2_theta_w_mz::<rug::Float>().to_f64();
     results.push(Prediction::new(
         "sin²θ_W(M_Z)",
         Category::Gauge,
@@ -71,7 +71,7 @@ pub fn compute_scorecard(digits: u32) -> Vec<Prediction> {
     ));
 
     // #4: sin²θ_W(GUT) — THEOREM
-    let s2w_gut = sin2_theta_w_gut().to_f64();
+    let s2w_gut = sin2_theta_w_gut::<rug::Float>().to_f64();
     results.push(Prediction::new(
         "sin²θ_W(GUT)",
         Category::Gauge,
