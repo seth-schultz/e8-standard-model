@@ -1,0 +1,14 @@
+[package]
+name = "e8-python"
+version = "0.1.0"
+edition = "2021"
+description = "Python bindings for the E8 Standard Model SDK"
+publish = false
+
+[lib]
+name = "e8"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.23", features = ["extension-module"] }
+e8-core = { path = "../e8-core" }

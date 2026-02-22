@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/e8-core",
     "crates/e8-cli",
+    "crates/e8-python",
 ]
 
 [profile.release]

@@ -82,7 +82,7 @@ impl Scalar for f64 {
     #[inline]
     fn euler_gamma() -> Self {
         // Euler–Mascheroni constant to full f64 precision.
-        0.5772156649015328606065120900824024310421_f64
+        0.577_215_664_901_532_9_f64
     }
 
     fn planck_mass_mev() -> Self { 1.220890e22 }

@@ -4,6 +4,7 @@
 //! The f64 path should agree to ~15 significant digits for most quantities,
 //! except CKM elements (Newton solver is precision-sensitive).
 
+use e8_core::precision::scalar::Scalar;
 use e8_core::precision::DefaultScalar;
 
 fn check_rel(name: &str, got: f64, reference: f64, tol: f64) {
