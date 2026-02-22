@@ -51,14 +51,15 @@ pub fn verify_coxeter_rules<S: Scalar>() -> (S, S) {
 mod tests {
     use super::*;
     use crate::precision::set_precision;
+    use crate::precision::DefaultScalar;
 
     #[test]
     fn test_pmns_angles() {
         set_precision(50);
 
-        let s13: rug::Float = sin2_theta13();
-        let s12: rug::Float = sin2_theta12();
-        let s23: rug::Float = sin2_theta23();
+        let s13: DefaultScalar = sin2_theta13();
+        let s12: DefaultScalar = sin2_theta12();
+        let s23: DefaultScalar = sin2_theta23();
 
         let s13 = s13.to_f64();
         let s12 = s12.to_f64();
@@ -89,14 +90,22 @@ mod tests {
     #[test]
     fn test_coxeter_rules() {
         set_precision(50);
-        let (sum, prod): (rug::Float, rug::Float) = verify_coxeter_rules();
+        let (sum, prod): (DefaultScalar, DefaultScalar) = verify_coxeter_rules();
 
         // sum = rank/h = 2/6 = 1/3
         let sum_err = (sum.to_f64() - 1.0 / 3.0).abs();
-        assert!(sum_err < 1e-40, "sum = {}", sum);
-
         // prod = 1/|W|² = 1/144
         let prod_err = (prod.to_f64() - 1.0 / 144.0).abs();
-        assert!(prod_err < 1e-40, "prod = {}", prod);
+
+        #[cfg(feature = "arbitrary-precision")]
+        {
+            assert!(sum_err < 1e-40, "sum = {}", sum);
+            assert!(prod_err < 1e-40, "prod = {}", prod);
+        }
+        #[cfg(not(feature = "arbitrary-precision"))]
+        {
+            assert!(sum_err < 1e-14, "sum = {}", sum);
+            assert!(prod_err < 1e-14, "prod = {}", prod);
+        }
     }
 }

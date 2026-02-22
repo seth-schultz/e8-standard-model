@@ -51,14 +51,15 @@ impl HiggsSector for E8HiggsSector {
 mod tests {
     use super::*;
     use crate::precision::set_precision;
+    use crate::precision::DefaultScalar;
 
     #[test]
     fn test_higgs_sector_trait() {
         set_precision(50);
         let hs = E8HiggsSector;
-        let lambda: rug::Float = hs.quartic();
+        let lambda: DefaultScalar = hs.quartic();
         assert!((lambda.to_f64() - 0.1315).abs() < 0.001);
-        let m_h: rug::Float = hs.higgs_mass_gev();
+        let m_h: DefaultScalar = hs.higgs_mass_gev();
         assert!((m_h.to_f64() - 125.3).abs() < 1.0);
         assert_eq!(hs.theta_qcd(), 0.0);
     }

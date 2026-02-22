@@ -64,11 +64,12 @@ impl PMNSMixing for G2PMNS {
 mod tests {
     use super::*;
     use crate::precision::set_precision;
+    use crate::precision::DefaultScalar;
 
     #[test]
     fn test_ckm_trait() {
         set_precision(50);
-        let masses = crate::mass::sectors::compute_all_masses::<rug::Float>();
+        let masses = crate::mass::sectors::compute_all_masses::<DefaultScalar>();
         let ckm_impl = FritzschCKM;
         let result = ckm_impl.ckm(&masses);
         let v_ud = result.magnitudes[0].to_f64();
@@ -79,7 +80,7 @@ mod tests {
     fn test_pmns_trait() {
         set_precision(50);
         let pmns = G2PMNS;
-        let s12: rug::Float = pmns.sin2_theta12();
+        let s12: DefaultScalar = pmns.sin2_theta12();
         assert!((s12.to_f64() - 0.311).abs() < 0.01);
     }
 }

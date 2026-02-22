@@ -6,12 +6,22 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use e8_core::scorecard::table::compute_scorecard;
+//! use e8_core::prelude::*;
 //!
 //! let predictions = compute_scorecard(50); // 50-digit precision
 //! for p in &predictions {
 //!     println!("{}: {:.6}", p.name, p.predicted);
 //! }
+//! ```
+//!
+//! ## SDK Usage
+//!
+//! ```rust,ignore
+//! use e8_core::prelude::*;
+//!
+//! let theory = e8_standard_model();
+//! let masses: AllMasses<DefaultScalar> = theory.masses();
+//! println!("m_e = {} MeV", masses.electron.to_f64());
 //! ```
 
 pub mod precision;
@@ -25,3 +35,4 @@ pub mod mixing;
 pub mod higgs;
 pub mod theory;
 pub mod scorecard;
+pub mod prelude;

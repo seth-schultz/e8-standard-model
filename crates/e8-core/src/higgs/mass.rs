@@ -30,11 +30,12 @@ mod tests {
     use super::*;
     use crate::precision::set_precision;
     use crate::precision::scalar::Scalar;
+    use crate::precision::DefaultScalar;
 
     #[test]
     fn test_higgs_mass() {
         set_precision(50);
-        let mh: rug::Float = higgs_mass_default();
+        let mh: DefaultScalar = higgs_mass_default();
         let val = mh.to_f64();
         // Experimental: 125.25 ± 0.17 GeV
         assert!(
@@ -47,7 +48,7 @@ mod tests {
     #[test]
     fn test_higgs_vev() {
         set_precision(50);
-        let m_t = rug::Float::from_f64(172.76);
+        let m_t = DefaultScalar::from_f64(172.76);
         let v = higgs_vev_gev(&m_t);
         let val = v.to_f64();
         // v ≈ 244 GeV (≈ √2 × 172.76)

@@ -50,11 +50,12 @@ pub fn second_scalar_mass<S: Scalar>(m_h_gev: &S) -> S {
 mod tests {
     use super::*;
     use crate::precision::set_precision;
+    use crate::precision::DefaultScalar;
 
     #[test]
     fn test_quartic() {
         set_precision(50);
-        let lambda: rug::Float = higgs_quartic();
+        let lambda: DefaultScalar = higgs_quartic();
         let val = lambda.to_f64();
         // λ ≈ 0.1315
         assert!(
@@ -72,7 +73,7 @@ mod tests {
     #[test]
     fn test_mh_mt_ratio() {
         set_precision(50);
-        let ratio: rug::Float = mh_over_mt();
+        let ratio: DefaultScalar = mh_over_mt();
         let val = ratio.to_f64();
         // m_H/m_t ≈ 125.25/172.76 ≈ 0.7251
         assert!(

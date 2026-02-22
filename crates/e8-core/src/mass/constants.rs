@@ -30,11 +30,12 @@ pub fn m_planck_mev<S: Scalar>() -> S {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::precision::DefaultScalar;
 
     #[test]
     fn test_mertens_r() {
         crate::precision::set_precision(50);
-        let r: rug::Float = mertens_r();
+        let r: DefaultScalar = mertens_r();
         // R ≈ 240 × 0.5615 ≈ 134.76
         assert!(r > 134.0 && r < 136.0);
     }
@@ -42,7 +43,7 @@ mod tests {
     #[test]
     fn test_delta() {
         crate::precision::set_precision(50);
-        let d: rug::Float = delta();
+        let d: DefaultScalar = delta();
         // δ ≈ 35/(4 × 97.409) ≈ 0.0899
         assert!(d > 0.089 && d < 0.091);
     }

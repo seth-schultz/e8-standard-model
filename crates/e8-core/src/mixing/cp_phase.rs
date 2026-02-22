@@ -43,11 +43,12 @@ pub fn fritzsch_phase<S: Scalar>() -> S {
 mod tests {
     use super::*;
     use crate::precision::set_precision;
+    use crate::precision::DefaultScalar;
 
     #[test]
     fn test_delta_ckm() {
         set_precision(50);
-        let d: rug::Float = delta_ckm_deg();
+        let d: DefaultScalar = delta_ckm_deg();
         let d = d.to_f64();
         // PDG: 65.5 ± 2.8°
         assert!(
@@ -60,7 +61,7 @@ mod tests {
     #[test]
     fn test_delta_pmns() {
         set_precision(50);
-        let d: rug::Float = delta_pmns_deg();
+        let d: DefaultScalar = delta_pmns_deg();
         let d = d.to_f64();
         // Measured: 197 ± 30°
         assert!(
@@ -74,8 +75,8 @@ mod tests {
     fn test_cp_complementarity() {
         set_precision(50);
         // sin(δ_CKM) = cos(π/7)
-        let sin_ckm = delta_ckm_rad::<rug::Float>().sin();
-        let cos_pi7 = fritzsch_phase::<rug::Float>().cos();
+        let sin_ckm = delta_ckm_rad::<DefaultScalar>().sin();
+        let cos_pi7 = fritzsch_phase::<DefaultScalar>().cos();
         let diff = (sin_ckm - cos_pi7).abs().to_f64();
         assert!(diff < 1e-40, "CP complementarity fails: diff = {}", diff);
     }

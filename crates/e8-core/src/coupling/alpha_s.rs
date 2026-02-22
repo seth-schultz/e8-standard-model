@@ -76,11 +76,12 @@ pub fn alpha_s_mz_with_mt<S: Scalar>(m_t_gev: &S) -> S {
 mod tests {
     use super::*;
     use crate::precision::set_precision;
+    use crate::precision::DefaultScalar;
 
     #[test]
     fn test_m_gut() {
         set_precision(50);
-        let mg: rug::Float = m_gut_gev();
+        let mg: DefaultScalar = m_gut_gev();
         let val = mg.to_f64();
         // M_GUT ≈ 4.58 × 10¹⁸ GeV
         assert!(val > 4e18 && val < 5e18, "M_GUT = {:.3e}", val);
@@ -89,7 +90,7 @@ mod tests {
     #[test]
     fn test_alpha_s() {
         set_precision(50);
-        let as_mz: rug::Float = alpha_s_mz();
+        let as_mz: DefaultScalar = alpha_s_mz();
         let val = as_mz.to_f64();
         // Paper: α_s(M_Z) = 0.11794 (PDG: 0.1180 ± 0.0009)
         assert!(

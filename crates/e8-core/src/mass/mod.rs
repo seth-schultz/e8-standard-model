@@ -126,12 +126,13 @@ pub fn compute_masses_from<S: Scalar, F: MassFormula, K: MassSplitting>(
 mod tests {
     use super::*;
     use crate::precision::set_precision;
+    use crate::precision::DefaultScalar;
 
     #[test]
     fn test_mass_formula_trait() {
         set_precision(50);
         let formula = E8MassFormula;
-        let sums: SectorSums<rug::Float> = formula.sector_sums();
+        let sums: SectorSums<DefaultScalar> = formula.sector_sums();
         let sigma_lep = sums.leptons.to_f64();
         assert!((sigma_lep - 1883.0).abs() < 1.0, "Σ_lep = {}", sigma_lep);
     }
@@ -139,7 +140,7 @@ mod tests {
     #[test]
     fn test_trait_based_masses() {
         set_precision(50);
-        let masses: AllMasses<rug::Float> =
+        let masses: AllMasses<DefaultScalar> =
             compute_masses_from(&E8MassFormula, &KoideSplitting);
         let m_e = masses.electron.to_f64();
         assert!((m_e - 0.511).abs() < 0.01, "m_e = {}", m_e);

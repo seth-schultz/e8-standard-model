@@ -541,11 +541,13 @@ mod tests {
     use super::*;
     use crate::mass::sectors::compute_all_masses;
     use crate::precision::set_precision;
+    use crate::precision::DefaultScalar;
 
     #[test]
+    #[cfg(feature = "arbitrary-precision")]
     fn test_ckm_magnitudes() {
         set_precision(50);
-        let masses = compute_all_masses::<rug::Float>();
+        let masses = compute_all_masses::<DefaultScalar>();
         let ckm = build_ckm(&masses);
 
         // Python reference: V_ud=0.974466, V_us=0.224507, V_ub=0.003631

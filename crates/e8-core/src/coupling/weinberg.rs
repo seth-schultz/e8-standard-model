@@ -38,18 +38,19 @@ pub fn sin2_theta_w_mz<S: Scalar>() -> S {
 mod tests {
     use super::*;
     use crate::precision::set_precision;
+    use crate::precision::DefaultScalar;
 
     #[test]
     fn test_sin2_gut() {
         set_precision(50);
-        let s: rug::Float = sin2_theta_w_gut();
+        let s: DefaultScalar = sin2_theta_w_gut();
         assert!((s.to_f64() - 0.375).abs() < 1e-15);
     }
 
     #[test]
     fn test_sin2_mz() {
         set_precision(50);
-        let s: rug::Float = sin2_theta_w_mz();
+        let s: DefaultScalar = sin2_theta_w_mz();
         let val = s.to_f64();
         // Experimental: 0.23122 ± 0.00003
         assert!(

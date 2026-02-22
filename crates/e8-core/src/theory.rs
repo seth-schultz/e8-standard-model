@@ -92,6 +92,7 @@ pub fn e8_standard_model() -> E8StandardModel {
 mod tests {
     use super::*;
     use crate::precision::set_precision;
+    use crate::precision::DefaultScalar;
 
     #[test]
     fn test_e8_standard_model() {
@@ -103,16 +104,16 @@ mod tests {
         assert!(theory.verify_roots());
 
         // Masses
-        let masses: AllMasses<rug::Float> = theory.masses();
+        let masses: AllMasses<DefaultScalar> = theory.masses();
         let m_e = masses.electron.to_f64();
         assert!((m_e - 0.511).abs() < 0.01, "m_e = {}", m_e);
 
         // Gauge couplings
-        let ai: rug::Float = theory.gauge_couplings.alpha_inverse();
+        let ai: DefaultScalar = theory.gauge_couplings.alpha_inverse();
         assert!((ai.to_f64() - 137.036).abs() < 0.001);
 
         // Higgs
-        let m_h: rug::Float = theory.higgs_sector.higgs_mass_gev();
+        let m_h: DefaultScalar = theory.higgs_sector.higgs_mass_gev();
         assert!((m_h.to_f64() - 125.3).abs() < 1.0);
 
         // CKM
@@ -121,7 +122,7 @@ mod tests {
         assert!((v_ud - 0.974).abs() < 0.01, "|V_ud| = {}", v_ud);
 
         // PMNS
-        let s12: rug::Float = theory.pmns_mixing.sin2_theta12();
+        let s12: DefaultScalar = theory.pmns_mixing.sin2_theta12();
         assert!((s12.to_f64() - 0.311).abs() < 0.01);
     }
 }

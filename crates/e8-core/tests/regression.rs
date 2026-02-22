@@ -25,6 +25,7 @@ fn check(name: &str, got: f64, expected: f64) {
 }
 
 #[test]
+#[cfg(feature = "arbitrary-precision")]
 fn regression_49_predictions() {
     let predictions = compute_scorecard(50);
     assert_eq!(predictions.len(), 49, "Expected 49 predictions, got {}", predictions.len());

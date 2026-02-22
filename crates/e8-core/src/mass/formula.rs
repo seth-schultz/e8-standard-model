@@ -84,11 +84,12 @@ pub fn compute_all_sector_sums<S: Scalar>() -> SectorSums<S> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::precision::DefaultScalar;
 
     #[test]
     fn test_lepton_sum() {
         crate::precision::set_precision(50);
-        let sigma: rug::Float = sector_sum_rational(9, 1, 1);
+        let sigma: DefaultScalar = sector_sum_rational(9, 1, 1);
         let val = sigma.to_f64();
         // Σ_lep ≈ 1883 MeV (sum of e + μ + τ)
         assert!(val > 1880.0 && val < 1890.0, "Σ_lep = {}", val);
@@ -97,7 +98,7 @@ mod tests {
     #[test]
     fn test_up_sum() {
         crate::precision::set_precision(50);
-        let sigma: rug::Float = sector_sum_rational(8, 3, 4);
+        let sigma: DefaultScalar = sector_sum_rational(8, 3, 4);
         let val = sigma.to_f64();
         // Σ_up ≈ 174,000 MeV (sum of u + c + t)
         assert!(val > 170_000.0 && val < 180_000.0, "Σ_up = {}", val);
@@ -106,7 +107,7 @@ mod tests {
     #[test]
     fn test_down_sum() {
         crate::precision::set_precision(50);
-        let sigma: rug::Float = sector_sum_rational(9, 9, 4);
+        let sigma: DefaultScalar = sector_sum_rational(9, 9, 4);
         let val = sigma.to_f64();
         // Σ_down ≈ 4237 MeV (sum of d + s + b)
         assert!(val > 4200.0 && val < 4300.0, "Σ_down = {}", val);

@@ -37,11 +37,12 @@ pub fn verify_cf_decomposition() -> bool {
 mod tests {
     use super::*;
     use crate::precision::set_precision;
+    use crate::precision::DefaultScalar;
 
     #[test]
     fn test_alpha_inverse() {
         set_precision(50);
-        let ai: rug::Float = alpha_inverse();
+        let ai: DefaultScalar = alpha_inverse();
         let val = ai.to_f64();
         // Should be very close to 137.035999177
         assert!(

@@ -76,19 +76,20 @@ mod tests {
     use super::*;
     use crate::precision::set_precision;
     use crate::precision::scalar::Scalar;
+    use crate::precision::DefaultScalar;
 
     #[test]
     fn test_lepton_koide() {
         set_precision(50);
 
         // Experimental lepton masses
-        let sigma = rug::Float::from_f64(0.51099895)
-            + rug::Float::from_f64(105.6583755)
-            + rug::Float::from_f64(1776.86);
+        let sigma = DefaultScalar::from_f64(0.51099895)
+            + DefaultScalar::from_f64(105.6583755)
+            + DefaultScalar::from_f64(1776.86);
 
         let params = KoideParams {
-            r_fourth: rug::Float::from_u64(4), // r⁴ = 4 → r = √2
-            phi: rug::Float::from_u64(2) / rug::Float::from_u64(9), // φ = 2/9
+            r_fourth: DefaultScalar::from_u64(4), // r⁴ = 4 → r = √2
+            phi: DefaultScalar::from_u64(2) / DefaultScalar::from_u64(9), // φ = 2/9
             sigma,
         };
 

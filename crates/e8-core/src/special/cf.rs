@@ -56,6 +56,7 @@ pub fn verify_euclidean() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::precision::DefaultScalar;
 
     #[test]
     fn test_cf_to_rational_full() {
@@ -81,7 +82,7 @@ mod tests {
     #[test]
     fn test_cf_to_float() {
         crate::precision::set_precision(50);
-        let val: rug::Float = cf_to_float(&ALPHA_CF_COEFFS);
+        let val: DefaultScalar = cf_to_float(&ALPHA_CF_COEFFS);
         let ratio = 8623762.0 / 35333.0;
         assert!((val.to_f64() - ratio).abs() < 1e-10);
     }

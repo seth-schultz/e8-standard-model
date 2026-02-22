@@ -138,11 +138,12 @@ pub fn compute_all_masses<S: Scalar>() -> AllMasses<S> {
 mod tests {
     use super::*;
     use crate::precision::set_precision;
+    use crate::precision::DefaultScalar;
 
     #[test]
     fn test_all_masses() {
         set_precision(50);
-        let m: AllMasses<rug::Float> = compute_all_masses();
+        let m: AllMasses<DefaultScalar> = compute_all_masses();
 
         // Leptons
         let e = m.electron.to_f64();

@@ -57,14 +57,15 @@ impl GaugeCouplings for E8GaugeCouplings {
 mod tests {
     use super::*;
     use crate::precision::set_precision;
+    use crate::precision::DefaultScalar;
 
     #[test]
     fn test_gauge_couplings_trait() {
         set_precision(50);
         let gc = E8GaugeCouplings;
-        let ai: rug::Float = gc.alpha_inverse();
+        let ai: DefaultScalar = gc.alpha_inverse();
         assert!((ai.to_f64() - 137.036).abs() < 0.001);
-        let s2w: rug::Float = gc.sin2_theta_w_gut();
+        let s2w: DefaultScalar = gc.sin2_theta_w_gut();
         assert!((s2w.to_f64() - 0.375).abs() < 1e-10);
     }
 }
