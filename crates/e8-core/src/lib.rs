@@ -23,4 +23,5 @@ pub mod mass;
 pub mod coupling;
 pub mod mixing;
 pub mod higgs;
+pub mod theory;
 pub mod scorecard;
