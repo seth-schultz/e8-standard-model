@@ -5,7 +5,16 @@
 
 use crate::algebra::groups::identities::{DIM_G2, DIM_IM_OCTONIONS, N_GEN};
 use crate::algebra::groups::G2;
+use crate::override_context::OverrideContext;
 use crate::precision::scalar::Scalar;
+
+/// CKM CP phase with overrides: δ_CKM = m₂ × fritzsch / 2 = m₂π/(2×dim(Im(O))).
+/// Default: 5π/14 ≈ 64.3° (since dim(G₂) = 2 × dim(Im(O))).
+pub fn delta_ckm_rad_with_ctx<S: Scalar>(ctx: &OverrideContext) -> S {
+    let m2 = G2.exponents[1]; // m₂ = 5
+    let fritzsch: S = fritzsch_phase_with_ctx(ctx);
+    S::from_u64(m2 as u64) * fritzsch / S::from_u64(2)
+}
 
 /// CKM CP phase: δ_CKM = m₂π/dim(G₂) = 5π/14 ≈ 64.3°.
 /// Origin: arg(C_Fritz) = π/dim(Im(O)) = π/7 from octonionic associator `[e₆,e₃,e₁]`.
@@ -18,6 +27,11 @@ pub fn delta_ckm_rad<S: Scalar>() -> S {
 /// CKM CP phase in degrees.
 pub fn delta_ckm_deg<S: Scalar>() -> S {
     delta_ckm_rad::<S>() * S::from_u64(180) / S::pi()
+}
+
+/// CKM CP phase in degrees with overrides.
+pub fn delta_ckm_deg_with_ctx<S: Scalar>(ctx: &OverrideContext) -> S {
+    delta_ckm_rad_with_ctx::<S>(ctx) * S::from_u64(180) / S::pi()
 }
 
 /// PMNS CP phase: δ_PMNS = (N_gen × m₂)π/dim(G₂) = 15π/14 ≈ 192.9°.
@@ -37,6 +51,13 @@ pub fn delta_pmns_deg<S: Scalar>() -> S {
 /// 2π/dim(G₂) = 2π/14 = π/7.
 pub fn fritzsch_phase<S: Scalar>() -> S {
     S::pi() / S::from_u64(DIM_IM_OCTONIONS as u64)
+}
+
+/// Fritzsch phase with overrides.
+pub fn fritzsch_phase_with_ctx<S: Scalar>(ctx: &OverrideContext) -> S {
+    let cp_num = ctx.get("cp_phase_numerator", 1.0);
+    let cp_den = ctx.get("cp_phase_denominator", DIM_IM_OCTONIONS as f64);
+    S::from_f64(cp_num) * S::pi() / S::from_f64(cp_den)
 }
 
 #[cfg(test)]
@@ -78,6 +99,10 @@ mod tests {
         let sin_ckm = delta_ckm_rad::<DefaultScalar>().sin();
         let cos_pi7 = fritzsch_phase::<DefaultScalar>().cos();
         let diff = (sin_ckm - cos_pi7).abs().to_f64();
+
+        #[cfg(feature = "arbitrary-precision")]
         assert!(diff < 1e-40, "CP complementarity fails: diff = {}", diff);
+        #[cfg(not(feature = "arbitrary-precision"))]
+        assert!(diff < 1e-14, "CP complementarity fails: diff = {}", diff);
     }
 }

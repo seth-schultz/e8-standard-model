@@ -10,6 +10,7 @@
 use crate::algebra::groups::identities::{DIM_IM_OCTONIONS, W_G2_PLUS_1};
 use crate::algebra::groups::{G2, SU3};
 use crate::mass::sectors::AllMasses;
+use crate::override_context::OverrideContext;
 use crate::precision::scalar::Scalar;
 
 /// CKM matrix result: 3×3 complex matrix + derived quantities.
@@ -23,9 +24,9 @@ pub struct CKMResult<S: Scalar> {
     pub delta_rad: S,
 }
 
-/// Build the full CKM matrix from quark masses (zero free parameters).
+/// Build the full CKM matrix with overridable self-energy coefficients.
 #[allow(clippy::needless_range_loop)]
-pub fn build_ckm<S: Scalar>(masses: &AllMasses<S>) -> CKMResult<S> {
+pub fn build_ckm_with_ctx<S: Scalar>(masses: &AllMasses<S>, ctx: &OverrideContext) -> CKMResult<S> {
     let m_u = &masses.up;
     let m_c = &masses.charm;
     let m_t = &masses.top;
@@ -36,11 +37,10 @@ pub fn build_ckm<S: Scalar>(masses: &AllMasses<S>) -> CKMResult<S> {
     // ════════════════════════════════════════════
     // DOWN SECTOR: Real symmetric Fritzsch texture
     // ════════════════════════════════════════════
-    // Self-energy corrections:
-    //   D₁ = -m_u (U(1) self-energy)
-    //   D₂ = -dim(su(3)) × m_u (SU(3) self-energy)
-    let d1_d = m_u.clone().neg();
-    let d2_d = S::from_i64(-(SU3.dimension as i64)) * m_u.clone();
+    let d1_d_coeff = ctx.get("ckm_d1_down_coeff", -1.0);
+    let d2_d_coeff = ctx.get("ckm_d2_down_coeff", -(SU3.dimension as f64));
+    let d1_d = S::from_f64(d1_d_coeff) * m_u.clone();
+    let d2_d = S::from_f64(d2_d_coeff) * m_u.clone();
 
     // Symmetric functions with sign convention: m_d, -m_s, m_b
     let s1_d = m_d.clone() - m_s.clone() + m_b.clone();
@@ -82,23 +82,24 @@ pub fn build_ckm<S: Scalar>(masses: &AllMasses<S>) -> CKMResult<S> {
     // ════════════════════════════════════════════
     // UP SECTOR: Complex Hermitian Fritzsch texture
     // ════════════════════════════════════════════
-    // D₁ = C₂(SU3,fund) × m_u = (4/3) × m_u
+    // D₁ = coefficient × m_u (default: C₂(SU3,fund) = 4/3)
     let (c2_num, c2_den) = SU3.c2_fundamental;
-    let c2_fund = S::from_u64(c2_num as u64) / S::from_u64(c2_den as u64);
-    let d1_u = c2_fund.clone() * m_u.clone();
-    // D₂ = C₂(SU3,fund) × (|W(G₂)|+1) / h(G₂) × m_c = (4/3)×13/6 × m_c = (26/9) × m_c
-    let d2_u_factor = c2_fund.clone() * S::from_u64(W_G2_PLUS_1)
-        / S::from_u64(G2.coxeter_number as u64);
-    let d2_u = d2_u_factor * m_c.clone();
+    let c2_fund_default = c2_num as f64 / c2_den as f64;
+    let d1_u_coeff = ctx.get("ckm_d1_up_coeff", c2_fund_default);
+    let d1_u = S::from_f64(d1_u_coeff) * m_u.clone();
+    // D₂ = coefficient × m_c (default: (4/3)×13/6 = 26/9)
+    let d2_u_default = c2_fund_default * W_G2_PLUS_1 as f64 / G2.coxeter_number as f64;
+    let d2_u_coeff = ctx.get("ckm_d2_up_coeff", d2_u_default);
+    let d2_u = S::from_f64(d2_u_coeff) * m_c.clone();
 
     let s1_u = m_u.clone() - m_c.clone() + m_t.clone();
     let d3_u = s1_u - d1_u.clone() - d2_u.clone();
 
     // CP phase from octonionic associator [e₆,e₃,e₁]
-    // arg(C) = π/dim(Im(O)) = π/7
-    let arg_c = S::pi() / S::from_u64(DIM_IM_OCTONIONS as u64);
+    let arg_c: S = super::cp_phase::fritzsch_phase_with_ctx(ctx);
 
-    // |C| = √(C₂(fund)) × √(m_u × m_t)
+    // |C| = √(d1_u_coeff × m_u × m_t)
+    let c2_fund = S::from_f64(d1_u_coeff);
     let c_mag = (c2_fund.clone() * m_u.clone() * m_t.clone()).sqrt();
 
     // C as complex number
@@ -223,8 +224,14 @@ pub fn build_ckm<S: Scalar>(masses: &AllMasses<S>) -> CKMResult<S> {
     CKMResult {
         magnitudes,
         jarlskog,
-        delta_rad: super::cp_phase::delta_ckm_rad(),
+        delta_rad: super::cp_phase::delta_ckm_rad_with_ctx::<S>(ctx),
     }
+}
+
+/// Build the full CKM matrix from quark masses (zero free parameters).
+#[allow(clippy::needless_range_loop)]
+pub fn build_ckm<S: Scalar>(masses: &AllMasses<S>) -> CKMResult<S> {
+    build_ckm_with_ctx(masses, &OverrideContext::new())
 }
 
 #[allow(clippy::needless_range_loop)]

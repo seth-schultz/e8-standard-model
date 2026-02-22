@@ -1,6 +1,10 @@
 use clap::{Parser, Subcommand};
+use e8_core::override_context::OverrideContext;
 use e8_core::scorecard::prediction::{Prediction, Status};
-use e8_core::scorecard::table::{compute_scorecard, scorecard_summary};
+use e8_core::scorecard::table::{
+    chi_squared, compute_scorecard, compute_scorecard_with_ctx, scorecard_summary,
+};
+use std::collections::HashMap;
 
 #[derive(Parser)]
 #[command(
@@ -38,6 +42,14 @@ enum Commands {
     Roots,
     /// Show hardware and precision info
     Info,
+    /// Compute theory with parameter overrides
+    ComputeTheory {
+        /// Path to JSON parameter file
+        #[arg(long)]
+        params: String,
+    },
+    /// List all overridable parameters
+    ListParams,
 }
 
 fn main() {
@@ -49,11 +61,12 @@ fn main() {
         Commands::Sector { name } => run_sector(digits, &name),
         Commands::Roots => run_roots(),
         Commands::Info => run_info(digits),
+        Commands::ComputeTheory { params } => run_compute_theory(digits, &params),
+        Commands::ListParams => run_list_params(),
     }
 }
 
-/// Format a floating-point value for display: use scientific notation for
-/// very large or very small (but nonzero) values, otherwise fixed precision.
+/// Format a floating-point value for display.
 fn format_value(v: f64) -> String {
     let abs = v.abs();
     if abs == 0.0 {
@@ -85,9 +98,11 @@ fn run_scorecard(digits: u32, format: &str, quiet: bool) {
             println!("{}", json);
         }
         _ => {
-            // Table format
             println!();
-            println!("E8 Standard Model Scorecard — {} quantities, 0 free parameters", predictions.len());
+            println!(
+                "E8 Standard Model Scorecard — {} quantities, 0 free parameters",
+                predictions.len()
+            );
             println!("Precision: {} digits | Backend: MPFR (rug)", digits);
             println!("{}", "═".repeat(100));
             println!();
@@ -98,26 +113,19 @@ fn run_scorecard(digits: u32, format: &str, quiet: bool) {
             println!(" {}", "─".repeat(95));
 
             for (i, p) in predictions.iter().enumerate() {
-                // Smart formatting: use scientific notation for very large/small numbers
                 let pred_str = format_value(p.predicted);
                 let exp_str = match p.experimental {
                     Some(e) => format_value(e),
                     None => "prediction".to_string(),
                 };
 
-                // Show percent error for all, pull only when meaningful
                 let err_str = match p.pct_error {
                     Some(e) if p.experimental.is_some() => format!("{:+.4}%", e),
                     _ => "─".to_string(),
                 };
 
-                // For pulls > 100σ with small % error, show the % error
-                // instead — the pull is meaningless (precision floor)
                 let pull_str = match p.pull_sigma {
-                    Some(pull) if pull.abs() > 100.0 => {
-                        // Precision floor: theory at ~0.01%, experiment at ppb
-                        "†".to_string()
-                    }
+                    Some(pull) if pull.abs() > 100.0 => "†".to_string(),
                     Some(pull) => format!("{:+.2}σ", pull),
                     None => "─".to_string(),
                 };
@@ -145,7 +153,6 @@ fn run_scorecard(digits: u32, format: &str, quiet: bool) {
             println!();
             println!("{}", "═".repeat(100));
 
-            // Count precision-floor entries separately
             let precision_floor: Vec<&Prediction> = predictions
                 .iter()
                 .filter(|p| {
@@ -156,7 +163,6 @@ fn run_scorecard(digits: u32, format: &str, quiet: bool) {
 
             let summary = scorecard_summary(&predictions);
 
-            // Adjusted stats: exclude precision-floor entries from pull counts
             let effective_with_exp = summary.with_experimental - precision_floor.len();
             let effective_1sigma = summary.within_1sigma;
             let effective_2sigma = summary.within_2sigma;
@@ -182,9 +188,88 @@ fn run_scorecard(digits: u32, format: &str, quiet: bool) {
                     precision_floor.len()
                 );
             }
+            println!("         χ² = {:.4}", summary.chi_squared);
             println!("Computed in {:.2}s", elapsed.as_secs_f64());
         }
     }
+}
+
+fn run_compute_theory(digits: u32, params_path: &str) {
+    // Read parameter file
+    let content = match std::fs::read_to_string(params_path) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("Error reading {}: {}", params_path, e);
+            std::process::exit(1);
+        }
+    };
+
+    let params: HashMap<String, f64> = match serde_json::from_str(&content) {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("Error parsing JSON: {}", e);
+            std::process::exit(1);
+        }
+    };
+
+    let ctx = match OverrideContext::from_params(params) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("Parameter validation error: {}", e);
+            std::process::exit(1);
+        }
+    };
+
+    eprintln!(
+        "Computing theory with {} overrides at {}-digit precision...",
+        ctx.len(),
+        digits
+    );
+
+    let start = std::time::Instant::now();
+
+    // Compute both baseline and theory
+    let baseline = compute_scorecard(digits);
+    let theory = compute_scorecard_with_ctx(digits, &ctx);
+    let elapsed = start.elapsed();
+
+    let baseline_chi2 = chi_squared(&baseline);
+    let theory_chi2 = chi_squared(&theory);
+
+    // Build JSON output
+    let output = serde_json::json!({
+        "predictions": theory,
+        "baseline_predictions": baseline,
+        "total_chi_squared": theory_chi2,
+        "baseline_chi_squared": baseline_chi2,
+        "improvement": theory_chi2 < baseline_chi2,
+        "runtime_ms": elapsed.as_millis() as u64,
+        "overrides": ctx.overrides(),
+        "summary": scorecard_summary(&theory),
+        "baseline_summary": scorecard_summary(&baseline),
+    });
+
+    println!("{}", serde_json::to_string_pretty(&output).unwrap());
+}
+
+fn run_list_params() {
+    let catalog = e8_core::override_context::parameter_catalog();
+    println!("Overridable Parameters ({} total):", catalog.len());
+    println!("{}", "─".repeat(80));
+    println!(
+        " {:<30} {:<10} {:>12} {:>8} {:>8}",
+        "Key", "Category", "Default", "Min", "Max"
+    );
+    println!("{}", "─".repeat(80));
+    for p in &catalog {
+        println!(
+            " {:<30} {:<10} {:>12.6} {:>8.2} {:>8.2}",
+            p.key, p.category, p.default_value, p.min, p.max
+        );
+    }
+    println!("{}", "─".repeat(80));
+    println!("\nUsage: e8-standard-model compute-theory --params params.json");
+    println!("params.json format: {{ \"key\": value, ... }}");
 }
 
 fn run_sector(digits: u32, name: &str) {
@@ -223,44 +308,87 @@ fn run_sector(digits: u32, name: &str) {
         }
         "gauge" => {
             println!("Gauge Couplings:");
-            println!("  1/α:         {:.12}", e8_core::coupling::alpha::alpha_inverse().to_f64());
-            println!("  sin²θ_W(GUT): {:.12}", e8_core::coupling::weinberg::sin2_theta_w_gut().to_f64());
-            println!("  sin²θ_W(M_Z): {:.12}", e8_core::coupling::weinberg::sin2_theta_w_mz().to_f64());
-            println!("  α_s(M_Z):     {:.12}", e8_core::coupling::alpha_s::alpha_s_mz().to_f64());
+            println!(
+                "  1/α:         {:.12}",
+                e8_core::coupling::alpha::alpha_inverse().to_f64()
+            );
+            println!(
+                "  sin²θ_W(GUT): {:.12}",
+                e8_core::coupling::weinberg::sin2_theta_w_gut().to_f64()
+            );
+            println!(
+                "  sin²θ_W(M_Z): {:.12}",
+                e8_core::coupling::weinberg::sin2_theta_w_mz().to_f64()
+            );
+            println!(
+                "  α_s(M_Z):     {:.12}",
+                e8_core::coupling::alpha_s::alpha_s_mz().to_f64()
+            );
         }
         "ckm" => {
             let masses = e8_core::mass::sectors::compute_all_masses();
             let ckm = e8_core::mixing::ckm::build_ckm(&masses);
-            let names = ["V_ud", "V_us", "V_ub", "V_cd", "V_cs", "V_cb", "V_td", "V_ts", "V_tb"];
+            let names = [
+                "V_ud", "V_us", "V_ub", "V_cd", "V_cs", "V_cb", "V_td", "V_ts", "V_tb",
+            ];
             println!("CKM Matrix:");
             for i in 0..3 {
-                println!("  [{:.6}, {:.6}, {:.6}]",
-                    ckm.magnitudes[i*3].to_f64(),
-                    ckm.magnitudes[i*3+1].to_f64(),
-                    ckm.magnitudes[i*3+2].to_f64());
+                println!(
+                    "  [{:.6}, {:.6}, {:.6}]",
+                    ckm.magnitudes[i * 3].to_f64(),
+                    ckm.magnitudes[i * 3 + 1].to_f64(),
+                    ckm.magnitudes[i * 3 + 2].to_f64()
+                );
             }
             println!();
             for (k, name) in names.iter().enumerate() {
                 println!("  {}: {:.8}", name, ckm.magnitudes[k].to_f64());
             }
             println!("  J:    {:.6e}", ckm.jarlskog.to_f64());
-            println!("  δ_CP: {:.4}°", ckm.delta_rad.to_f64() * 180.0 / std::f64::consts::PI);
+            println!(
+                "  δ_CP: {:.4}°",
+                ckm.delta_rad.to_f64() * 180.0 / std::f64::consts::PI
+            );
         }
         "pmns" => {
             println!("PMNS Mixing Angles:");
-            println!("  sin²θ₁₃: {:.8}", e8_core::mixing::pmns::sin2_theta13().to_f64());
-            println!("  sin²θ₁₂: {:.8}", e8_core::mixing::pmns::sin2_theta12().to_f64());
-            println!("  sin²θ₂₃: {:.8}", e8_core::mixing::pmns::sin2_theta23().to_f64());
-            println!("  δ_PMNS:   {:.4}°", e8_core::mixing::cp_phase::delta_pmns_deg().to_f64());
+            println!(
+                "  sin²θ₁₃: {:.8}",
+                e8_core::mixing::pmns::sin2_theta13().to_f64()
+            );
+            println!(
+                "  sin²θ₁₂: {:.8}",
+                e8_core::mixing::pmns::sin2_theta12().to_f64()
+            );
+            println!(
+                "  sin²θ₂₃: {:.8}",
+                e8_core::mixing::pmns::sin2_theta23().to_f64()
+            );
+            println!(
+                "  δ_PMNS:   {:.4}°",
+                e8_core::mixing::cp_phase::delta_pmns_deg().to_f64()
+            );
         }
         "higgs" => {
             println!("Higgs Sector:");
-            println!("  λ_H:    {:.8}", e8_core::higgs::quartic::higgs_quartic().to_f64());
-            println!("  m_H:    {:.4} GeV", e8_core::higgs::mass::higgs_mass_default().to_f64());
-            println!("  m_H/m_t: {:.8}", e8_core::higgs::quartic::mh_over_mt().to_f64());
+            println!(
+                "  λ_H:    {:.8}",
+                e8_core::higgs::quartic::higgs_quartic().to_f64()
+            );
+            println!(
+                "  m_H:    {:.4} GeV",
+                e8_core::higgs::mass::higgs_mass_default().to_f64()
+            );
+            println!(
+                "  m_H/m_t: {:.8}",
+                e8_core::higgs::quartic::mh_over_mt().to_f64()
+            );
         }
         _ => {
-            eprintln!("Unknown sector: {}. Options: leptons, up, down, neutrinos, gauge, ckm, pmns, higgs", name);
+            eprintln!(
+                "Unknown sector: {}. Options: leptons, up, down, neutrinos, gauge, ckm, pmns, higgs",
+                name
+            );
             std::process::exit(1);
         }
     }
@@ -270,7 +398,10 @@ fn run_roots() {
     println!("E8 Root System:");
     let roots = e8_core::lattice::roots::generate_e8_roots();
     println!("  Total roots: {}", roots.len());
-    println!("  All |α|² = 2: {}", e8_core::lattice::roots::verify_root_norms(&roots));
+    println!(
+        "  All |α|² = 2: {}",
+        e8_core::lattice::roots::verify_root_norms(&roots)
+    );
 
     let dist = e8_core::lattice::roots::inner_product_distribution(&roots);
     println!("  Inner product distribution:");
@@ -280,15 +411,24 @@ fn run_roots() {
 
     let plaquettes = e8_core::lattice::plaquettes::find_plaquettes(&roots);
     let stats = e8_core::lattice::plaquettes::verify_plaquettes(&roots, &plaquettes);
-    println!("  Plaquettes: {} (28 per root: {})", stats.count, stats.all_per_root_equal);
+    println!(
+        "  Plaquettes: {} (28 per root: {})",
+        stats.count, stats.all_per_root_equal
+    );
     println!("  All inner products = -1: {}", stats.all_ip_minus_one);
 
     println!("\nOctonionic Associator:");
     let (fano, non_fano) = e8_core::octonion::associator::count_non_fano_triples();
     println!("  Fano triples: {}", fano);
     println!("  Non-Fano triples: {}", non_fano);
-    println!("  ||T||² = {}", e8_core::octonion::associator::total_associator_norm_squared());
-    println!("  Uniform distribution: {}", e8_core::octonion::associator::verify_uniform_distribution());
+    println!(
+        "  ||T||² = {}",
+        e8_core::octonion::associator::total_associator_norm_squared()
+    );
+    println!(
+        "  Uniform distribution: {}",
+        e8_core::octonion::associator::verify_uniform_distribution()
+    );
 }
 
 fn run_info(digits: u32) {

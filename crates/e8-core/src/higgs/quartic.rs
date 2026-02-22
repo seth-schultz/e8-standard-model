@@ -6,7 +6,17 @@
 
 use crate::algebra::groups::identities::{DIM_IM_OCTONIONS, PHI_E6};
 use crate::algebra::groups::G2;
+use crate::override_context::OverrideContext;
 use crate::precision::scalar::Scalar;
+
+/// λ with overridable numerator/denominator.
+pub fn higgs_quartic_with_ctx<S: Scalar>(ctx: &OverrideContext) -> S {
+    let pi4 = S::pi().powi(4);
+    let num = ctx.get("higgs_lambda_num", DIM_IM_OCTONIONS as f64);
+    let den = ctx.get("higgs_lambda_den", (PHI_E6 as f64).powi(2));
+
+    S::from_f64(num) * pi4 / S::from_f64(den)
+}
 
 /// λ = dim(Im(O)) × π⁴ / |Φ(E₆)|² = 7π⁴/72²
 ///
@@ -15,11 +25,7 @@ use crate::precision::scalar::Scalar;
 /// - π⁴/12 = Res(Z_E8, s=4) — Epstein zeta residue
 /// - |Φ(E₆)| = 72 = h(G₂) × |W(G₂)| = 6 × 12
 pub fn higgs_quartic<S: Scalar>() -> S {
-    let pi4 = S::pi().powi(4);
-    let dim_im_o = S::from_u64(DIM_IM_OCTONIONS as u64);
-    let phi_e6_sq = S::from_u64(PHI_E6 as u64 * PHI_E6 as u64);
-
-    dim_im_o * pi4 / phi_e6_sq
+    higgs_quartic_with_ctx(&OverrideContext::new())
 }
 
 /// Verify λ(m_P) = 0: E8 has no degree-4 Casimir.
@@ -57,12 +63,7 @@ mod tests {
         set_precision(50);
         let lambda: DefaultScalar = higgs_quartic();
         let val = lambda.to_f64();
-        // λ ≈ 0.1315
-        assert!(
-            (val - 0.1315).abs() < 0.001,
-            "λ = {}",
-            val
-        );
+        assert!((val - 0.1315).abs() < 0.001, "λ = {}", val);
     }
 
     #[test]
@@ -75,11 +76,6 @@ mod tests {
         set_precision(50);
         let ratio: DefaultScalar = mh_over_mt();
         let val = ratio.to_f64();
-        // m_H/m_t ≈ 125.25/172.76 ≈ 0.7251
-        assert!(
-            (val - 0.725).abs() < 0.005,
-            "m_H/m_t = {}",
-            val
-        );
+        assert!((val - 0.725).abs() < 0.005, "m_H/m_t = {}", val);
     }
 }
