@@ -1,10 +1,14 @@
-//! The E8 mass formula: Σ = f × m_P × exp(-((A + ΔA)×R + δ)/dim(so(8))).
+//! The E8 mass formula: Σ = f × m_P × exp(-(A×R + δ)/dim(so(8))).
 //!
-//! QCD corrections: ΔA shifts the effective A-value for colored sectors.
-//! - ΔA_leptons = 0 (no color charge)
-//! - ΔA_neutrinos = 0 (no color charge)
-//! - ΔA_up = -(α_s × C_F) / (π × 3 × |Φ(E₆)|) = -(α_s × 4/3) / (π × 216)
-//! - ΔA_down = ΔA_up × (9 - 2/7) = ΔA_up × 61/7
+//! A-values are integer representation quantum numbers:
+//! - A_leptons = dim(u(3)) = 9
+//! - A_neutrinos = dim(G₂) = 14
+//! - A_up = dim(su(3)) = 8
+//! - A_down = dim(u(3)) = 9
+//!
+//! QCD corrections (ΔA) are available via `delta_a_up()` / `delta_a_down()` for
+//! research, but are NOT applied by default — the tree-level integer values match
+//! the paper's mass table.
 
 use crate::algebra::groups::identities::N_C;
 use crate::algebra::groups::{G2, SU3};
@@ -69,6 +73,8 @@ const ALPHA_S_MZ: f64 = 0.11794;
 ///
 /// C_F = 4/3, E6_SU3_FACTOR = 216 = 3 × |Φ(E₆)|.
 /// Physical origin: gluon dressing shifts the effective lattice distance.
+///
+/// Not applied by default; available for research via overrides.
 pub fn delta_a_up() -> f64 {
     -(ALPHA_S_MZ * CF_FUNDAMENTAL) / (std::f64::consts::PI * E6_SU3_FACTOR)
 }
@@ -79,21 +85,26 @@ pub fn delta_a_up() -> f64 {
 /// - 9 = dim(u(3)) = A_down
 /// - 2/7 = rank(G₂)/dim(Im(O))
 /// Enhanced correction because 5̄ representation couples more strongly.
+///
+/// Not applied by default; available for research via overrides.
 pub fn delta_a_down() -> f64 {
     delta_a_up() * 61.0 / 7.0
 }
 
 /// Compute all four sector mass sums with overrides.
+///
+/// By default, A-values are pure integers from representation theory (tree level).
+/// QCD ΔA corrections can be enabled via the override context.
 pub fn compute_all_sector_sums_with_ctx<S: Scalar>(ctx: &OverrideContext) -> SectorSums<S> {
     let (c2_num, c2_den) = SU3.c2_fundamental;
 
     let norm = ctx.get("norm_factor", 28.0);
 
-    // QCD ΔA corrections (overridable)
-    let da_up = ctx.get("delta_a_up", delta_a_up());
-    let da_down = ctx.get("delta_a_down", delta_a_down());
+    // ΔA defaults to 0 (tree level); override to enable QCD corrections
+    let da_up = ctx.get("delta_a_up", 0.0);
+    let da_down = ctx.get("delta_a_down", 0.0);
 
-    // A-values with QCD corrections (overridable)
+    // A-values with optional ΔA corrections (overridable)
     let a_lep = ctx.get("a_lepton", (SU3.dimension + 1) as f64);
     let a_up = ctx.get("a_up", SU3.dimension as f64 + da_up);
     let a_down = ctx.get("a_down", (SU3.dimension + 1) as f64 + da_down);
@@ -128,13 +139,11 @@ pub fn compute_all_sector_sums_with_ctx<S: Scalar>(ctx: &OverrideContext) -> Sec
 
 /// Compute all four sector mass sums.
 ///
-/// A-values from representation theory (with QCD ΔA corrections for quarks):
+/// A-values from representation theory (tree-level integers):
 ///   leptons (1 of SU5): A = dim(u(3)) = dim(su(3)) + 1 = 9
-///   up (10 of SU5):     A = dim(su(3)) + ΔA_up ≈ 8 - 0.000232
-///   down (5̄ of SU5):   A = dim(u(3)) + ΔA_down ≈ 9 - 0.00202
+///   up (10 of SU5):     A = dim(su(3)) = 8
+///   down (5̄ of SU5):   A = dim(u(3)) = 9
 ///   neutrinos:          A = dim(G₂) = 14
-///
-/// ΔA_up = -(α_s × C_F) / (π × 216),  ΔA_down = ΔA_up × 61/7
 ///
 /// f-factors from color Casimir scaling:
 ///   f_lep  = 1 (color singlet)
@@ -229,27 +238,27 @@ mod tests {
         // because exp(-(A+ΔA)R/28) > exp(-AR/28) when ΔA < 0
         crate::precision::set_precision(50);
 
-        // Without QCD corrections
-        let mut params = std::collections::HashMap::new();
-        params.insert("delta_a_up".to_string(), 0.0);
-        params.insert("delta_a_down".to_string(), 0.0);
-        let ctx_no_qcd = OverrideContext::from_params(params).unwrap();
-        let sums_no_qcd = compute_all_sector_sums_with_ctx::<DefaultScalar>(&ctx_no_qcd);
+        // Default is now tree-level (no QCD corrections)
+        let sums_tree = compute_all_sector_sums::<DefaultScalar>();
 
-        // With default QCD corrections
-        let sums_qcd = compute_all_sector_sums::<DefaultScalar>();
+        // Explicitly enable QCD corrections via overrides
+        let mut params = std::collections::HashMap::new();
+        params.insert("delta_a_up".to_string(), delta_a_up());
+        params.insert("delta_a_down".to_string(), delta_a_down());
+        let ctx_qcd = OverrideContext::from_params(params).unwrap();
+        let sums_qcd = compute_all_sector_sums_with_ctx::<DefaultScalar>(&ctx_qcd);
 
         assert!(
-            sums_qcd.up.to_f64() > sums_no_qcd.up.to_f64(),
+            sums_qcd.up.to_f64() > sums_tree.up.to_f64(),
             "QCD correction should increase Σ_up"
         );
         assert!(
-            sums_qcd.down.to_f64() > sums_no_qcd.down.to_f64(),
+            sums_qcd.down.to_f64() > sums_tree.down.to_f64(),
             "QCD correction should increase Σ_down"
         );
         // Leptons should be identical
         assert!(
-            (sums_qcd.leptons.to_f64() - sums_no_qcd.leptons.to_f64()).abs() < 1e-10,
+            (sums_qcd.leptons.to_f64() - sums_tree.leptons.to_f64()).abs() < 1e-10,
             "Lepton sum should be unchanged"
         );
     }

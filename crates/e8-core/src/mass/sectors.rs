@@ -1,15 +1,13 @@
 //! Sector configurations for all fermion families.
 //!
-//! Each sector's Koide parameters are derived from E8 representation theory:
-//! - r⁴ from SU(5) Yukawa structure (+ QCD corrections for quarks)
-//! - φ from G₂ Coxeter geometry (+ QCD corrections for quarks)
+//! Each sector's Koide parameters are pure topological/representation-theoretic:
+//! - r⁴ from SU(5) Yukawa structure
+//! - φ from G₂ Coxeter geometry
 //! - Σ from the mass formula with group-theoretic A and f
 //!
-//! QCD corrections to Koide parameters:
-//! - Up quarks:   Δr⁴ = -α_s/(4π) × 15/14 × (1 - α_s/34)
-//!                Δφ  = +α_s/(400π) × 57/56
-//! - Down quarks: Δr⁴ = Δr⁴_up / 14
-//!                Δφ  = -Δφ_up / √2
+//! QCD corrections to Koide parameters are available via `delta_r4_up()` etc.
+//! for research, but are NOT applied by default. The tree-level values match
+//! the paper's mass table.
 
 use crate::algebra::groups::{G2, SU5};
 use crate::override_context::OverrideContext;
@@ -96,17 +94,20 @@ pub fn delta_phi_down() -> f64 {
 }
 
 /// Compute all masses with overrides.
+///
+/// By default, Koide parameters are pure tree-level values from representation
+/// theory (no QCD corrections). QCD shifts can be enabled via overrides.
 pub fn compute_all_masses_with_ctx<S: Scalar>(ctx: &OverrideContext) -> AllMasses<S> {
     let sums = compute_all_sector_sums_with_ctx::<S>(ctx);
 
     let h = G2.coxeter_number; // h(G₂) = 6
     let w = G2.weyl_order;     // |W(G₂)| = 12
 
-    // QCD corrections to Koide parameters
-    let dr4_up = delta_r4_up();
-    let dr4_down = delta_r4_down();
-    let dphi_up = delta_phi_up();
-    let dphi_down = delta_phi_down();
+    // QCD corrections default to 0 (tree level); functions available for research
+    let dr4_up = 0.0;
+    let dr4_down = 0.0;
+    let dphi_up = 0.0;
+    let dphi_down = 0.0;
 
     // ═══════════════════════════════════════════════════════════
     // Charged leptons: r⁴ = 4 = (√2)⁴, φ = 2/9 (Z₃ variational)
@@ -122,9 +123,8 @@ pub fn compute_all_masses_with_ctx<S: Scalar>(ctx: &OverrideContext) -> AllMasse
     let lep = koide_masses(&lep_params);
 
     // ═══════════════════════════════════════════════════════════
-    // Up quarks: r⁴ = dim(∧²(5)) + Δr⁴_up = 10 + Δr⁴_up
-    //            φ = (h-1)⁴/h⁵ + Δφ_up = 625/7776 + Δφ_up
-    // QCD corrections from gluon dressing of Yukawa couplings
+    // Up quarks: r⁴ = dim(∧²(5)) = 10
+    //            φ = (h-1)⁴/h⁵ = 625/7776
     // ═══════════════════════════════════════════════════════════
     let n_su5 = SU5.rank + 1; // 5
     let dim_antisym = n_su5 * (n_su5 - 1) / 2; // C(5,2) = 10
@@ -141,9 +141,8 @@ pub fn compute_all_masses_with_ctx<S: Scalar>(ctx: &OverrideContext) -> AllMasse
     let up = koide_masses(&up_params);
 
     // ═══════════════════════════════════════════════════════════
-    // Down quarks: r⁴ = (10 - √2) + Δr⁴_down
-    //              φ = 1/h(G₂) + Δφ_down = 1/6 + Δφ_down
-    // QCD corrections suppressed by 1/dim(G₂) relative to up sector
+    // Down quarks: r⁴ = 10 - √2
+    //              φ = 1/h(G₂) = 1/6
     // ═══════════════════════════════════════════════════════════
     let r4_down_default = dim_antisym as f64 - std::f64::consts::SQRT_2 + dr4_down;
     let r4_down = ctx.get("r4_down", r4_down_default);
@@ -234,33 +233,5 @@ mod tests {
         assert!(d > 3.0 && d < 6.0, "d = {}", d);
         assert!(s > 85.0 && s < 105.0, "s = {}", s);
         assert!(b > 4100.0 && b < 4300.0, "b = {}", b);
-    }
-
-    #[test]
-    fn test_qcd_koide_corrections() {
-        // Verify QCD corrections have the expected signs and magnitudes
-        let dr4_up = delta_r4_up();
-        let dr4_down = delta_r4_down();
-        let dphi_up = delta_phi_up();
-        let dphi_down = delta_phi_down();
-
-        // Δr⁴_up < 0 (gluon dressing reduces effective coupling)
-        assert!(dr4_up < 0.0, "Δr⁴_up = {}", dr4_up);
-        // Δr⁴_down = Δr⁴_up / 14, same sign
-        assert!(dr4_down < 0.0, "Δr⁴_down = {}", dr4_down);
-        assert!((dr4_down * 14.0 - dr4_up).abs() < 1e-15, "ratio check");
-
-        // Δφ_up > 0
-        assert!(dphi_up > 0.0, "Δφ_up = {}", dphi_up);
-        // Δφ_down = -Δφ_up/√2 < 0
-        assert!(dphi_down < 0.0, "Δφ_down = {}", dphi_down);
-        assert!(
-            (dphi_down + dphi_up / std::f64::consts::SQRT_2).abs() < 1e-15,
-            "Δφ_down relation"
-        );
-
-        // Corrections are small (perturbative: proportional to α_s/(4π))
-        assert!(dr4_up.abs() < 0.02, "|Δr⁴_up| should be < 0.02");
-        assert!(dphi_up.abs() < 0.001, "|Δφ_up| should be < 0.001");
     }
 }

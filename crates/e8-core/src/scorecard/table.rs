@@ -96,22 +96,22 @@ pub fn compute_scorecard_with_ctx(digits: u32, ctx: &OverrideContext) -> Vec<Pre
     results.push(Prediction::new("m_τ", Category::LeptonMass, "Koide(Σ_ℓ, √2, 2/9)", m_tau, Some(1776.86), Some(0.12), "MeV", Status::Derived));
 
     let m_u = masses.up.to_f64();
-    results.push(Prediction::new("m_u", Category::UpQuarkMass, "Koide(Σ_u, 10^{1/4}, 5⁴/6⁵) + QCD", m_u, Some(2.16), Some(0.49), "MeV", Status::Derived));
+    results.push(Prediction::new("m_u", Category::UpQuarkMass, "Koide(Σ_u, 10^{1/4}, 5⁴/6⁵)", m_u, Some(2.16), Some(0.49), "MeV", Status::Derived));
 
     let m_c = masses.charm.to_f64();
-    results.push(Prediction::new("m_c", Category::UpQuarkMass, "Koide(Σ_u, 10^{1/4}, 5⁴/6⁵) + QCD", m_c, Some(1270.0), Some(20.0), "MeV", Status::Derived));
+    results.push(Prediction::new("m_c", Category::UpQuarkMass, "Koide(Σ_u, 10^{1/4}, 5⁴/6⁵)", m_c, Some(1270.0), Some(20.0), "MeV", Status::Derived));
 
     let m_t = masses.top.to_f64();
-    results.push(Prediction::new("m_t", Category::UpQuarkMass, "Koide(Σ_u, 10^{1/4}, 5⁴/6⁵) + QCD", m_t, Some(172760.0), Some(300.0), "MeV", Status::Derived));
+    results.push(Prediction::new("m_t", Category::UpQuarkMass, "Koide(Σ_u, 10^{1/4}, 5⁴/6⁵)", m_t, Some(172760.0), Some(300.0), "MeV", Status::Derived));
 
     let m_d = masses.down.to_f64();
-    results.push(Prediction::new("m_d", Category::DownQuarkMass, "Koide(Σ_d, (10-√2)^{1/4}, 1/6) + QCD", m_d, Some(4.67), Some(0.48), "MeV", Status::Derived));
+    results.push(Prediction::new("m_d", Category::DownQuarkMass, "Koide(Σ_d, (10-√2)^{1/4}, 1/6)", m_d, Some(4.67), Some(0.48), "MeV", Status::Derived));
 
     let m_s = masses.strange.to_f64();
-    results.push(Prediction::new("m_s", Category::DownQuarkMass, "Koide(Σ_d, (10-√2)^{1/4}, 1/6) + QCD", m_s, Some(93.4), Some(8.6), "MeV", Status::Derived));
+    results.push(Prediction::new("m_s", Category::DownQuarkMass, "Koide(Σ_d, (10-√2)^{1/4}, 1/6)", m_s, Some(93.4), Some(8.6), "MeV", Status::Derived));
 
     let m_b = masses.bottom.to_f64();
-    results.push(Prediction::new("m_b", Category::DownQuarkMass, "Koide(Σ_d, (10-√2)^{1/4}, 1/6) + QCD", m_b, Some(4180.0), Some(30.0), "MeV", Status::Derived));
+    results.push(Prediction::new("m_b", Category::DownQuarkMass, "Koide(Σ_d, (10-√2)^{1/4}, 1/6)", m_b, Some(4180.0), Some(30.0), "MeV", Status::Derived));
 
     // ═══════════════════════════════════════════════════════════
     // #14-17: SECTOR MASS SUMS (MeV)
@@ -123,11 +123,11 @@ pub fn compute_scorecard_with_ctx(digits: u32, ctx: &OverrideContext) -> Vec<Pre
 
     let sigma_up = masses.sigma_up.to_f64();
     let sigma_up_exp = 2.16 + 1270.0 + 172760.0;
-    results.push(Prediction::new("Σ_up", Category::MassSum, "(3/4)m_P × exp(-((8+ΔA)R+δ)/28)", sigma_up, Some(sigma_up_exp), Some(sigma_up_exp * 0.002), "MeV", Status::Derived));
+    results.push(Prediction::new("Σ_up", Category::MassSum, "(3/4)m_P × exp(-(8R+δ)/28)", sigma_up, Some(sigma_up_exp), Some(sigma_up_exp * 0.002), "MeV", Status::Derived));
 
     let sigma_down = masses.sigma_down.to_f64();
     let sigma_down_exp = 4.67 + 93.4 + 4180.0;
-    results.push(Prediction::new("Σ_down", Category::MassSum, "(9/4)m_P × exp(-((9+ΔA)R+δ)/28)", sigma_down, Some(sigma_down_exp), Some(sigma_down_exp * 0.01), "MeV", Status::Derived));
+    results.push(Prediction::new("Σ_down", Category::MassSum, "(9/4)m_P × exp(-(9R+δ)/28)", sigma_down, Some(sigma_down_exp), Some(sigma_down_exp * 0.01), "MeV", Status::Derived));
 
     let sigma_nu = masses.nu1.to_f64() + masses.nu2.to_f64() + masses.nu3.to_f64();
     results.push(Prediction::new("Σ_ν", Category::MassSum, "√(10/13)·m_P × exp(-(14R+δ)/28)", sigma_nu, None, None, "meV", Status::Derived));
