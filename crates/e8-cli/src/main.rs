@@ -1,5 +1,7 @@
 use clap::{Parser, Subcommand};
+use e8_core::mass::sectors::AllMasses;
 use e8_core::override_context::OverrideContext;
+use e8_core::precision::DefaultScalar;
 use e8_core::scorecard::prediction::{Prediction, Status};
 use e8_core::scorecard::table::{
     chi_squared, compute_scorecard, compute_scorecard_with_ctx, scorecard_summary,
@@ -276,7 +278,7 @@ fn run_sector(digits: u32, name: &str) {
     e8_core::precision::set_precision(digits);
     match name {
         "leptons" | "lepton" => {
-            let masses = e8_core::mass::sectors::compute_all_masses();
+            let masses: AllMasses<DefaultScalar> = e8_core::mass::sectors::compute_all_masses();
             println!("Charged Lepton Masses (MeV):");
             println!("  electron: {:.10}", masses.electron.to_f64());
             println!("  muon:     {:.10}", masses.muon.to_f64());
@@ -284,7 +286,7 @@ fn run_sector(digits: u32, name: &str) {
             println!("  Σ_lep:    {:.10}", masses.sigma_lep.to_f64());
         }
         "up" => {
-            let masses = e8_core::mass::sectors::compute_all_masses();
+            let masses: AllMasses<DefaultScalar> = e8_core::mass::sectors::compute_all_masses();
             println!("Up-Type Quark Masses (MeV):");
             println!("  up:    {:.10}", masses.up.to_f64());
             println!("  charm: {:.10}", masses.charm.to_f64());
@@ -292,7 +294,7 @@ fn run_sector(digits: u32, name: &str) {
             println!("  Σ_up:  {:.10}", masses.sigma_up.to_f64());
         }
         "down" => {
-            let masses = e8_core::mass::sectors::compute_all_masses();
+            let masses: AllMasses<DefaultScalar> = e8_core::mass::sectors::compute_all_masses();
             println!("Down-Type Quark Masses (MeV):");
             println!("  down:    {:.10}", masses.down.to_f64());
             println!("  strange: {:.10}", masses.strange.to_f64());
@@ -300,7 +302,7 @@ fn run_sector(digits: u32, name: &str) {
             println!("  Σ_down:  {:.10}", masses.sigma_down.to_f64());
         }
         "neutrinos" | "neutrino" => {
-            let masses = e8_core::mass::sectors::compute_all_masses();
+            let masses: AllMasses<DefaultScalar> = e8_core::mass::sectors::compute_all_masses();
             println!("Neutrino Masses (meV):");
             println!("  ν₁: {:.6}", masses.nu1.to_f64());
             println!("  ν₂: {:.6}", masses.nu2.to_f64());
@@ -310,23 +312,23 @@ fn run_sector(digits: u32, name: &str) {
             println!("Gauge Couplings:");
             println!(
                 "  1/α:         {:.12}",
-                e8_core::coupling::alpha::alpha_inverse().to_f64()
+                e8_core::coupling::alpha::alpha_inverse::<DefaultScalar>().to_f64()
             );
             println!(
                 "  sin²θ_W(GUT): {:.12}",
-                e8_core::coupling::weinberg::sin2_theta_w_gut().to_f64()
+                e8_core::coupling::weinberg::sin2_theta_w_gut::<DefaultScalar>().to_f64()
             );
             println!(
                 "  sin²θ_W(M_Z): {:.12}",
-                e8_core::coupling::weinberg::sin2_theta_w_mz().to_f64()
+                e8_core::coupling::weinberg::sin2_theta_w_mz::<DefaultScalar>().to_f64()
             );
             println!(
                 "  α_s(M_Z):     {:.12}",
-                e8_core::coupling::alpha_s::alpha_s_mz().to_f64()
+                e8_core::coupling::alpha_s::alpha_s_mz::<DefaultScalar>().to_f64()
             );
         }
         "ckm" => {
-            let masses = e8_core::mass::sectors::compute_all_masses();
+            let masses: AllMasses<DefaultScalar> = e8_core::mass::sectors::compute_all_masses();
             let ckm = e8_core::mixing::ckm::build_ckm(&masses);
             let names = [
                 "V_ud", "V_us", "V_ub", "V_cd", "V_cs", "V_cb", "V_td", "V_ts", "V_tb",
@@ -354,34 +356,34 @@ fn run_sector(digits: u32, name: &str) {
             println!("PMNS Mixing Angles:");
             println!(
                 "  sin²θ₁₃: {:.8}",
-                e8_core::mixing::pmns::sin2_theta13().to_f64()
+                e8_core::mixing::pmns::sin2_theta13::<DefaultScalar>().to_f64()
             );
             println!(
                 "  sin²θ₁₂: {:.8}",
-                e8_core::mixing::pmns::sin2_theta12().to_f64()
+                e8_core::mixing::pmns::sin2_theta12::<DefaultScalar>().to_f64()
             );
             println!(
                 "  sin²θ₂₃: {:.8}",
-                e8_core::mixing::pmns::sin2_theta23().to_f64()
+                e8_core::mixing::pmns::sin2_theta23::<DefaultScalar>().to_f64()
             );
             println!(
                 "  δ_PMNS:   {:.4}°",
-                e8_core::mixing::cp_phase::delta_pmns_deg().to_f64()
+                e8_core::mixing::cp_phase::delta_pmns_deg::<DefaultScalar>().to_f64()
             );
         }
         "higgs" => {
             println!("Higgs Sector:");
             println!(
                 "  λ_H:    {:.8}",
-                e8_core::higgs::quartic::higgs_quartic().to_f64()
+                e8_core::higgs::quartic::higgs_quartic::<DefaultScalar>().to_f64()
             );
             println!(
                 "  m_H:    {:.4} GeV",
-                e8_core::higgs::mass::higgs_mass_default().to_f64()
+                e8_core::higgs::mass::higgs_mass_default::<DefaultScalar>().to_f64()
             );
             println!(
                 "  m_H/m_t: {:.8}",
-                e8_core::higgs::quartic::mh_over_mt().to_f64()
+                e8_core::higgs::quartic::mh_over_mt::<DefaultScalar>().to_f64()
             );
         }
         _ => {

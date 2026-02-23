@@ -81,6 +81,26 @@ pub fn parameter_catalog() -> Vec<ParamSpec> {
         },
 
         // ═══════════════════════════════════════════
+        // Mass sector: QCD ΔA corrections
+        // ═══════════════════════════════════════════
+        ParamSpec {
+            key: "delta_a_up",
+            description: "QCD ΔA for up quarks: -(α_s × C_F)/(π × 216) ≈ -0.000232",
+            category: ParamCategory::Mass,
+            default_value: -0.000232, // approximate; exact value computed at runtime
+            min: -0.01,
+            max: 0.01,
+        },
+        ParamSpec {
+            key: "delta_a_down",
+            description: "QCD ΔA for down quarks: ΔA_up × 61/7 ≈ -0.00202",
+            category: ParamCategory::Mass,
+            default_value: -0.00202, // approximate; exact value computed at runtime
+            min: -0.1,
+            max: 0.1,
+        },
+
+        // ═══════════════════════════════════════════
         // Mass sector: f-factors
         // ═══════════════════════════════════════════
         ParamSpec {

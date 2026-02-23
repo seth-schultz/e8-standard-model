@@ -72,19 +72,26 @@ pub fn compute_masses_from<S: Scalar, F: MassFormula, K: MassSplitting>(
     let w = crate::algebra::groups::G2.weyl_order;     // 12
     let n_su5 = crate::algebra::groups::SU5.rank + 1;  // 5
 
+    // QCD corrections to Koide parameters
+    let dr4_up = sectors::delta_r4_up();
+    let dr4_down = sectors::delta_r4_down();
+    let dphi_up = sectors::delta_phi_up();
+    let dphi_down = sectors::delta_phi_down();
+
     // Leptons: r⁴ = 4 = (√2)⁴, φ = 2/9
     let r4_lep = S::from_u64(4);
     let phi_lep = S::from_u64(2) / S::from_u64(9);
 
-    // Up quarks: r⁴ = C(5,2) = 10, φ = 5⁴/6⁵
+    // Up quarks: r⁴ = C(5,2) + Δr⁴_up = 10 + Δr⁴_up, φ = 5⁴/6⁵ + Δφ_up
     let dim_antisym = (n_su5 * (n_su5 - 1) / 2) as u64; // 10
-    let r4_up = S::from_u64(dim_antisym);
+    let r4_up = S::from_u64(dim_antisym) + S::from_f64(dr4_up);
     let phi_up = S::from_u64(((h - 1) as u64).pow(4))
-        / S::from_u64((h as u64).pow(5));
+        / S::from_u64((h as u64).pow(5))
+        + S::from_f64(dphi_up);
 
-    // Down quarks: r⁴ = 10 - √2, φ = 1/6
-    let r4_down = S::from_u64(dim_antisym) - S::from_u64(2).sqrt();
-    let phi_down = S::one() / S::from_u64(h as u64);
+    // Down quarks: r⁴ = 10 - √2 + Δr⁴_down, φ = 1/6 + Δφ_down
+    let r4_down = S::from_u64(dim_antisym) - S::from_u64(2).sqrt() + S::from_f64(dr4_down);
+    let phi_down = S::one() / S::from_u64(h as u64) + S::from_f64(dphi_down);
 
     // Neutrinos: r⁴ = 4, φ = 2/9 + π/12, sigma in meV (×10⁹)
     let r4_nu = S::from_u64(4);

@@ -4,6 +4,20 @@ use crate::algebra::groups::identities::{BINOM_IM_O_3, DIM_SO8};
 use crate::algebra::groups::E8;
 use crate::precision::scalar::Scalar;
 
+// ═══════════════════════════════════════════════════════════════
+// QCD correction constants from E8 subgroup geometry
+// ═══════════════════════════════════════════════════════════════
+
+/// C_F = 4/3 — color Casimir for fundamental representation of SU(3).
+pub const CF_FUNDAMENTAL: f64 = 4.0 / 3.0;
+
+/// |Φ(E₆)| = 72 — number of roots of E₆.
+pub const PHI_E6_ROOTS: u32 = 72;
+
+/// 3 × |Φ(E₆)| = 216 — from E8 ⊃ E6 × SU(3) decomposition.
+/// n_colors × |Φ(E₆)| = 3 × 72.
+pub const E6_SU3_FACTOR: f64 = 216.0;
+
 /// R = |Φ(E8)| × e^{-γ} — the Mertens-regularized coordination number.
 /// 240 = |Φ(E8)| (number of roots), e^{-γ} from Epstein zeta regularization.
 pub fn mertens_r<S: Scalar>() -> S {
@@ -54,5 +68,14 @@ mod tests {
         assert_eq!(E8.num_roots, 240);
         assert_eq!(DIM_SO8, 28);
         assert_eq!(BINOM_IM_O_3, 35);
+    }
+
+    #[test]
+    fn test_qcd_constants() {
+        assert!((CF_FUNDAMENTAL - 4.0 / 3.0).abs() < 1e-15);
+        assert_eq!(PHI_E6_ROOTS, 72);
+        assert!((E6_SU3_FACTOR - 216.0).abs() < 1e-15);
+        // Verify decomposition: 3 × 72 = 216
+        assert_eq!(3 * PHI_E6_ROOTS as u64, E6_SU3_FACTOR as u64);
     }
 }
