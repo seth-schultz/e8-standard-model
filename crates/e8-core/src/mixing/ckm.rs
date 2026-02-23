@@ -557,7 +557,7 @@ mod tests {
         let masses = compute_all_masses::<DefaultScalar>();
         let ckm = build_ckm(&masses);
 
-        // Python reference: V_ud=0.974466, V_us=0.224507, V_ub=0.003631
+        // Python reference (script 169): V_ud=0.97456, V_us=0.22417, V_ub=0.003544
         let v_ud = ckm.magnitudes[0].to_f64();
         assert!(
             (v_ud - 0.9745).abs() < 0.005,

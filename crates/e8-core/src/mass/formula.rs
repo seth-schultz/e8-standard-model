@@ -66,6 +66,31 @@ pub fn sector_sum_rational<S: Scalar>(a: u32, f_num: u64, f_den: u64) -> S {
     sector_sum(a, &f)
 }
 
+/// Cross-rep vertex correction for the down quark sector.
+///
+/// Physical origin: the cross-representation Yukawa coupling (10 × 5̄) has
+/// lower coupling density than the same-representation coupling (10 × 10).
+///
+/// Coupling density ρ = fraction of root pairs with α + β ∈ Φ(E₈):
+///   ρ_same  = 272/1128  (pairs in (10∪10̄)²)
+///   ρ_cross = 1520/6720 (pairs in (10∪10̄)×(5∪5̄))
+///   Ratio = (272 × 6720) / (1520 × 1128) = 952/893
+///
+/// Exposure fraction from NN combinatorics on the E₈ root graph:
+///   20 active roots (Q = ±3/2 in 10) each have 9 NN in 5̄
+///   3 cross-sector + 6 same-sector NN per root
+///   Exponent = N_c / N_active = 3/20
+///
+/// Correction = (952/893)^{3/20} ≈ 1.009643
+///
+/// Derivation: Script 169 (cross_rep_spectral.py). Zero free parameters.
+/// Result: Σ_down error -0.96% → -0.0075% (128× improvement).
+pub fn cross_rep_vertex_correction<S: Scalar>() -> S {
+    let ratio = S::from_u64(952) / S::from_u64(893);
+    let exponent = S::from_u64(3) / S::from_u64(20);
+    ratio.pow(&exponent)
+}
+
 /// α_s(M_Z) = 0.11794 — the E8-derived strong coupling (not a free parameter).
 const ALPHA_S_MZ: f64 = 0.11794;
 
@@ -129,10 +154,18 @@ pub fn compute_all_sector_sums_with_ctx<S: Scalar>(ctx: &OverrideContext) -> Sec
         (S::from_u64(w_minus_r) / S::from_u64(w_plus_1)).sqrt()
     };
 
+    // Cross-rep vertex correction for down sector: (952/893)^{3/20}
+    // Overridable: set "vertex_correction_down" to 1.0 to disable.
+    let vertex_corr: S = if ctx.overrides().contains_key("vertex_correction_down") {
+        S::from_f64(ctx.get("vertex_correction_down", 1.0))
+    } else {
+        cross_rep_vertex_correction()
+    };
+
     SectorSums {
         leptons: sector_sum_f64(a_lep, &f_lep, norm),
         up: sector_sum_f64(a_up, &f_up, norm),
-        down: sector_sum_f64(a_down, &f_down, norm),
+        down: sector_sum_f64(a_down, &f_down, norm) * vertex_corr,
         neutrino: sector_sum_f64(a_nu, &f_nu, norm),
     }
 }
@@ -177,11 +210,29 @@ mod tests {
     }
 
     #[test]
-    fn test_down_sum() {
+    fn test_down_sum_tree() {
+        // Tree-level (before vertex correction)
         crate::precision::set_precision(50);
         let sigma: DefaultScalar = sector_sum_rational(9, 9, 4);
         let val = sigma.to_f64();
-        assert!(val > 4200.0 && val < 4300.0, "Σ_down = {}", val);
+        assert!(val > 4200.0 && val < 4300.0, "Σ_down(tree) = {}", val);
+    }
+
+    #[test]
+    fn test_down_sum_corrected() {
+        // With cross-rep vertex correction (952/893)^{3/20}
+        crate::precision::set_precision(50);
+        let sums = compute_all_sector_sums::<DefaultScalar>();
+        let val = sums.down.to_f64();
+        assert!(val > 4270.0 && val < 4290.0, "Σ_down(corrected) = {}", val);
+    }
+
+    #[test]
+    fn test_vertex_correction_value() {
+        crate::precision::set_precision(50);
+        let corr: DefaultScalar = cross_rep_vertex_correction();
+        let val = corr.to_f64();
+        assert!((val - 1.009643).abs() < 0.0001, "vertex correction = {}", val);
     }
 
     #[test]

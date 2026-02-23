@@ -127,7 +127,7 @@ pub fn compute_scorecard_with_ctx(digits: u32, ctx: &OverrideContext) -> Vec<Pre
 
     let sigma_down = masses.sigma_down.to_f64();
     let sigma_down_exp = 4.67 + 93.4 + 4180.0;
-    results.push(Prediction::new("Σ_down", Category::MassSum, "(9/4)m_P × exp(-(9R+δ)/28)", sigma_down, Some(sigma_down_exp), Some(sigma_down_exp * 0.01), "MeV", Status::Derived));
+    results.push(Prediction::new("Σ_down", Category::MassSum, "(9/4)m_P × exp(-(9R+δ)/28) × (952/893)^{3/20}", sigma_down, Some(sigma_down_exp), Some(sigma_down_exp * 0.01), "MeV", Status::Derived));
 
     let sigma_nu = masses.nu1.to_f64() + masses.nu2.to_f64() + masses.nu3.to_f64();
     results.push(Prediction::new("Σ_ν", Category::MassSum, "√(10/13)·m_P × exp(-(14R+δ)/28)", sigma_nu, None, None, "meV", Status::Derived));

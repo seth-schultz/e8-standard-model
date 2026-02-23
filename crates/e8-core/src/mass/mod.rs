@@ -94,6 +94,7 @@ pub fn compute_masses_from<S: Scalar, F: MassFormula, K: MassSplitting>(
 
     let lep = splitting.split::<S>(&sums.leptons, &r4_lep, &phi_lep);
     let up = splitting.split::<S>(&sums.up, &r4_up, &phi_up);
+    // sums.down already includes cross-rep vertex correction (952/893)^{3/20}
     let down = splitting.split::<S>(&sums.down, &r4_down, &phi_down);
     let nu = splitting.split::<S>(&sigma_nu_mev, &r4_nu, &phi_nu);
 

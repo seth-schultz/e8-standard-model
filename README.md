@@ -27,24 +27,24 @@ Precision: 250 digits | Backend: MPFR (rug)
    8  m_u                          2.207043       2.160000   +2.1779%    +0.10σ ◆ DERIVED
    9  m_c                            1264.5         1270.0   -0.4320%    -0.27σ ◆ DERIVED
   10  m_t                          172502.4       172760.0   -0.1491%    -0.86σ ◆ DERIVED
-  11  m_d                          4.636000       4.670000   -0.7281%    -0.07σ ◆ DERIVED
-  12  m_s                         92.543202      93.400000   -0.9173%    -0.10σ ◆ DERIVED
-  13  m_b                            4139.7         4180.0   -0.9638%    -1.34σ ◆ DERIVED
+  11  m_d                          4.680705       4.670000   +0.2292%    +0.02σ ◆ DERIVED
+  12  m_s                         93.435592      93.400000   +0.0381%    +0.00σ ◆ DERIVED
+  13  m_b                            4179.6         4180.0   -0.0088%    -0.01σ ◆ DERIVED
   14  Σ_lep                          1883.1         1883.0   +0.0018%    +0.18σ ◆ DERIVED
   15  Σ_up                         173769.2       174032.2   -0.1511%    -0.76σ ◆ DERIVED
-  16  Σ_down                         4236.9         4278.1   -0.9625%    -0.96σ ◆ DERIVED
+  16  Σ_down                         4277.7         4278.1   -0.0075%    -0.01σ ◆ DERIVED
   17  Σ_ν                         58.568072     prediction          ─         ─ ◆ DERIVED
-  18  V_ud                         0.974466       0.973730   +0.0756%    +2.37σ ◆ DERIVED
-  19  V_us                         0.224507       0.224300   +0.0921%    +0.41σ ◆ DERIVED
-  20  V_ub                         0.003631       0.003820   -4.9558%    -0.95σ ◆ DERIVED
-  21  V_cd                         0.224376       0.221000   +1.5275%    +0.84σ ◆ DERIVED
-  22  V_cs                         0.973604       0.975000   -0.1432%    -0.23σ ◆ DERIVED
-  23  V_cb                         0.041838       0.040800   +2.5429%    +0.74σ ◆ DERIVED
-  24  V_td                         0.008479       0.008600   -1.4044%    -0.60σ ◆ DERIVED
-  25  V_ts                         0.041130       0.041500   -0.8920%    -0.41σ ◆ DERIVED
-  26  V_tb                         0.999118       1.014000   -1.4677%    -0.51σ ◆ DERIVED
+  18  V_ud                         0.974561       0.973730   +0.0853%    +2.68σ ◆ DERIVED
+  19  V_us                         0.224093       0.224300   -0.0921%    -0.41σ ◆ DERIVED
+  20  V_ub                         0.003634       0.003820   -4.8710%    -0.93σ ◆ DERIVED
+  21  V_cd                         0.223965       0.221000   +1.3414%    +0.74σ ◆ DERIVED
+  22  V_cs                         0.973706       0.975000   -0.1327%    -0.22σ ◆ DERIVED
+  23  V_cb                         0.041660       0.040800   +2.1077%    +0.61σ ◆ DERIVED
+  24  V_td                         0.008419       0.008600   -2.0989%    -0.90σ ◆ DERIVED
+  25  V_ts                         0.040962       0.041500   -1.2969%    -0.60σ ◆ DERIVED
+  26  V_tb                         0.999125       1.014000   -1.4669%    -0.51σ ◆ DERIVED
   27  δ_CKM                       64.285714      65.500000   -1.8539%    -0.43σ ◆ DERIVED
-  28  J (Jarlskog)                 2.991e-5       3.080e-5   -2.8847%    -0.59σ ◆ DERIVED
+  28  J (Jarlskog)                 2.973e-5       3.080e-5   -3.4662%    -0.71σ ◆ DERIVED
   29  sin²θ₁₂                      0.311004       0.307000   +1.3043%    +0.31σ ◆ DERIVED
   30  sin²θ₂₃                      0.535898       0.546000   -1.8501%    -0.48σ ◆ DERIVED
   31  sin²θ₁₃                      0.022329       0.022200   +0.5815%    +0.19σ ◆ DERIVED
@@ -69,7 +69,7 @@ Precision: 250 digits | Backend: MPFR (rug)
 
 ════════════════════════════════════════════════════════════════════════════════════════════════════
 Summary: 8 ■ THEOREM | 40 ◆ DERIVED | 1 ◇ DERIVED*
-         31/33 within 1σ (93%) | 32/33 within 2σ (96%)
+         32/33 within 1σ (96%) | 32/33 within 2σ (96%)
          2 entries at precision floor (†): theory ~0.005% vs experiment ~ppb
 ```
 
@@ -88,13 +88,13 @@ This is the computational companion to a theoretical physics paper. It implement
 | Gauge couplings | 1/alpha, sin^2(theta_W), alpha_s | 0.001 ppb, -0.14 sigma, -0.07 sigma |
 | Charged lepton masses | e, mu, tau | 0.005% (precision floor) |
 | Quark masses | u, c, t, d, s, b | 0.1% - 2.2% |
-| CKM matrix | 9 elements + Jarlskog J + delta_CKM | Max pull 2.4 sigma |
+| CKM matrix | 9 elements + Jarlskog J + delta_CKM | Max pull 2.7 sigma |
 | PMNS mixing | 3 angles + delta_PMNS | Max pull 0.48 sigma |
 | Neutrino masses | m_1, m_2, m_3, Delta m^2_21, Delta m^2_31 | 0.13 sigma, -0.10 sigma |
 | Higgs sector | m_H, lambda_H, theta_QCD = 0 | -0.74 sigma |
 | Second scalar | m_S = 95.6 GeV | Testable prediction |
 
-31/33 predictions with experimental data fall within 1 sigma (93%).
+32/33 predictions with experimental data fall within 1 sigma (96%).
 
 ### What is *not* computed
 
